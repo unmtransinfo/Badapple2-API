@@ -1,0 +1,14 @@
+TZ=America/Denver
+# all DB_* variables must match what is in the database Dockerfile!
+DB_NAME=badapple_classic
+DB_USER=robin
+DB_PASSWORD=katchow
+DB_PORT=5443
+# you will need to edit the apache config with the SSL port here
+BADAPPLE_NGINX_SSL_PORT=
+BADAPPLE_NGINX_HTTP_PORT=
+APP_NAME=Badapple2-API
+# make sure nginx.conf uses this APP_PORT (TODO: remove hard-coding of nginx.conf)
+APP_PORT=
+APP_URL=chiltepin.health.unm.edu/badapple2
+VITE_API_HOST=https://chiltepin.health.unm.edu/badapple2/api/v1/compound_search/get_associated_scaffolds_ordered

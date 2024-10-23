@@ -18,7 +18,7 @@ class BadappleDB:
     def connect():
         return psycopg2.connect(
             host=current_app.config.get("DB_HOST"),
-            database=current_app.config.get("DB_DATABASE"),
+            database=current_app.config.get("DB_NAME"),
             user=current_app.config.get("DB_USER"),
             password=current_app.config.get("DB_PASSWORD"),
             port=current_app.config.get("DB_PORT"),

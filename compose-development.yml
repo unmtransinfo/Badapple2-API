@@ -3,8 +3,12 @@ services:
     build:
       context: app
       dockerfile: Dockerfile
+    env_file: 
+      - ./app/.env
+    environment:
+      - APP_PORT=${APP_PORT}
     ports: 
-      - '8000:8000'
+      - '${APP_PORT}:${APP_PORT}'
     network_mode: "host" 
 # WARNING: ONLY USE network_mode: "host"  IN DEVELOPMENT!
 # Using here as database is on "localhost" - avoids having to setup networking on local machine

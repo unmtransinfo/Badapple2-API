@@ -1,0 +1,88 @@
+services:
+  badapple_db:
+    restart: always
+    build:
+      context: https://github.com/unmtransinfo/Badapple2.git#main
+      dockerfile: Dockerfile_BA_classic
+    container_name: badapple_classic_db
+    ports:
+      - "127.0.0.1:${DB_PORT}:${DB_PORT}" # 127.0.0.1 to restrict to localhost
+    environment:
+      # note the difference between build and runtime - 
+      # these values may not actually be overriden in the Dockerfile
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+      - TZ=${TZ}
+    env_file:
+      - .env
+    volumes:
+      - badapple_classic_data:/var/lib/postgresql/14/main
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d ${DB_NAME} -p ${DB_PORT}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - badapple_backend
+
+  badapple_api:
+    restart: always
+    build:
+      context: ./app
+    environment:
+      - APP_PORT=${APP_PORT}
+      - DB_HOST=badapple_db # host is docker container
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+    env_file:
+      - .env
+    depends_on:
+      badapple_db:
+        condition: service_healthy
+    networks:
+      - badapple_backend
+      - badapple_frontend
+
+  badapple_ui:
+    build:
+      context: https://github.com/unmtransinfo/Badapple2-UI.git#main
+    environment:
+      - NODE_OPTIONS=--openssl-legacy-provider
+    env_file:
+      - .env
+    command: npx vite build
+    volumes:
+      - static_files_badapple:/app/dist/
+    networks:
+      - badapple_frontend
+
+  badapple_nginx:
+    restart: always
+    image: nginx:1
+    volumes:
+      - static_files_badapple:/usr/share/nginx/html/static_files_badapple:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - nginx:/etc/nginx
+    ports:
+      - "${BADAPPLE_NGINX_SSL_PORT:-443}:443"
+      - "${BADAPPLE_NGINX_HTTP_PORT:-80}:80"
+    depends_on:
+      badapple_api:
+        condition: service_started
+      badapple_ui:
+        condition: service_completed_successfully
+    networks:
+      - badapple_frontend
+
+volumes:
+  badapple_classic_data:
+  static_files_badapple:
+  nginx:
+
+networks:
+  badapple_frontend:
+  badapple_backend:
