@@ -3,8 +3,8 @@ services:
     restart: always
     build:
       # TODO: change to main once updates finished
-      context: https://github.com/unmtransinfo/Badapple2.git#production
-      dockerfile: docker/Dockerfile_BA_classic
+      context: https://github.com/unmtransinfo/Badapple2.git#production:docker
+      dockerfile: Dockerfile_BA_classic
       args:
         - DB_PORT=${DB_PORT}
         - DB_NAME=${DB_NAME}
