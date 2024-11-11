@@ -4,12 +4,16 @@ services:
     build:
       context: https://github.com/unmtransinfo/Badapple2.git#main
       dockerfile: Dockerfile_BA_classic
+      args:
+        - DB_PORT=${DB_PORT}
+        - DB_NAME=${DB_NAME}
+        - DB_USER=${DB_USER}
+        - DB_PASSWORD=${DB_PASSWORD}
+        - TZ=${TZ}
     container_name: badapple_classic_db
     ports:
       - "127.0.0.1:${DB_PORT}:${DB_PORT}" # 127.0.0.1 to restrict to localhost
     environment:
-      # note the difference between build and runtime - 
-      # these values may not actually be overriden in the Dockerfile
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
@@ -33,7 +37,7 @@ services:
       context: ./app
     environment:
       - APP_PORT=${APP_PORT}
-      - DB_HOST=badapple_db # host is docker container
+      - DB_HOST=badapple_db # host is docker service
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}

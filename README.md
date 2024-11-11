@@ -28,5 +28,10 @@ The `compose-production.yml` file will spin up the Badapple2 website (DB, API, a
     * Update the apache2 virtual config file: `/etc/apache2/sites-enabled/000-default.conf`
     * Run config check: `sudo apachectl configtest`
     * (If config check passed) reload apache: `sudo systemctl reload apache2`
-4. Run `docker-compose -f compose-production.yml up --build -d`
+4. (If server was previously up): `docker-compose -f compose-production.yml down`
+5. Run `docker-compose -f compose-production.yml up --build -d`
 
+### Production notes
+* If you are noticing some UI changes not showing up you may need to clear your browser cache
+* You will likely need to clear the docker cache if you've made changes to the DB
+* If you've pushed changes to the UI and docker is still using the cached github context, try changing UI build context to either a specific branch or commit. See https://docs.docker.com/reference/compose-file/build/#attributes for more info.

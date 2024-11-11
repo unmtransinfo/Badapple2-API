@@ -9,7 +9,6 @@ import psycopg2
 import psycopg2.extras
 from flask import abort, current_app
 from psycopg2 import sql
-from utils.smiles_utils import get_canon_smiles
 from utils.type_check import int_check
 
 
@@ -48,11 +47,8 @@ class BadappleDB:
         return result
 
     def search_scaffold(scafsmi: str):
-        # first canonicalize SMILES
-        scafsmi = get_canon_smiles(scafsmi)
         if scafsmi is None:
             return abort(400, "Invalid SMILES provided")
-        # TODO: change "LIMIT 1" (or handle the handful of duplicate scafsmis in some way)
         query = sql.SQL(
             "SELECT * from scaffold where scafsmi={scafsmi} LIMIT 1"
         ).format(scafsmi=sql.Literal(scafsmi))
