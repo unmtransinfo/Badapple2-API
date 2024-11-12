@@ -9,10 +9,10 @@ from flasgger import swag_from
 from flask import Blueprint, abort, jsonify, request
 from utils.scaffold_utils import get_scaffolds_single_mol
 
-hiers = Blueprint("hiers", __name__, url_prefix="/hiers")
+hiers_api = Blueprint("hiers", __name__, url_prefix="/hiers")
 
 
-@hiers.route("/get_scaffolds", methods=["GET"])
+@hiers_api.route("/get_scaffolds", methods=["GET"])
 @swag_from(
     {
         "parameters": [
