@@ -44,11 +44,11 @@ def get_mol2scaf_dict(network: CustomHierS) -> dict[str, list[str]]:
     return mol_to_scafs
 
 
-def get_scaffolds_single_mol(mol_smiles: str, name: str, ring_cutoff: int):
+def get_scaffolds_single_mol(mol_smiles: str, name: str, max_rings: int):
     # setup network
     smiles_dict = {"Smiles": [mol_smiles], "Name": [name]}
     smiles_df = pd.DataFrame.from_dict(smiles_dict)
-    network = CustomHierS.from_dataframe(smiles_df, ring_cutoff=ring_cutoff)
+    network = CustomHierS.from_dataframe(smiles_df, ring_cutoff=max_rings)
     # get scaffolds, convert to json for use with API / UI
     mol2scafs = get_mol2scaf_dict(network)
     if len(mol2scafs.keys()) < 1:

@@ -8,6 +8,7 @@ API call for getting scaffolds using HierS algo.
 from flasgger import swag_from
 from flask import Blueprint, abort, jsonify, request
 from utils.process_scaffolds import get_scaffolds_single_mol
+from utils.type_check import int_check
 
 hiers_api = Blueprint("hiers", __name__, url_prefix="/hiers")
 
@@ -21,7 +22,7 @@ hiers_api = Blueprint("hiers", __name__, url_prefix="/hiers")
                 "in": "query",
                 "type": "string",
                 "required": True,
-                "description": "input molecule SMILES",
+                "description": "Input molecule SMILES",
             },
             {
                 "name": "name",
@@ -29,15 +30,15 @@ hiers_api = Blueprint("hiers", __name__, url_prefix="/hiers")
                 "type": "string",
                 "default": "",
                 "required": False,
-                "description": "input molecule name",
+                "description": "Input molecule name",
             },
             {
-                "name": "ring_cutoff",
+                "name": "max_rings",
                 "in": "query",
                 "type": "integer",
                 "default": 10,
                 "required": False,
-                "description": "ignore molecules with more than the specified number of rings to avoid extended processing times",
+                "description": "Ignore molecules with more than the specified number of ring systems to avoid extended processing times",
             },
         ],
         "responses": {
@@ -56,8 +57,9 @@ def get_scaffolds():
     """
     mol_smiles = request.args.get("SMILES", type=str)
     name = request.args.get("name", type=str) or ""
-    ring_cutoff = request.args.get("ring_cutoff", type=int) or 10
-    result = get_scaffolds_single_mol(mol_smiles, name, ring_cutoff)
+    max_rings = request.args.get("max_rings", type=int) or 10
+    max_rings = int_check(max_rings)
+    result = get_scaffolds_single_mol(mol_smiles, name, max_rings)
     if result == {}:
         return abort(400, "Invalid SMILES provided")
     return jsonify(result)
