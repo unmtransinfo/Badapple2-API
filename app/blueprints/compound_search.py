@@ -10,9 +10,8 @@ from collections import defaultdict
 from database.database import BadappleDB
 from flasgger import swag_from
 from flask import Blueprint, abort, jsonify, request
+from utils.process_scaffolds import get_scaffolds_single_mol
 from utils.request_processing import process_integer_list_input, process_list_input
-
-from app.utils.process_scaffolds import get_scaffolds_single_mol
 
 compound_search = Blueprint("compound_search", __name__, url_prefix="/compound_search")
 
@@ -24,7 +23,6 @@ def _get_associated_scaffolds_from_list(smiles_list: list[str]) -> dict[str, lis
     result = {}
 
     for smiles in smiles_list:
-        # original code uses ring_cutoff=30, hence why using it here
         scaf_res = get_scaffolds_single_mol(smiles, name="", ring_cutoff=30)
         if scaf_res == {}:
             # ignore invalid SMILES

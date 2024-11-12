@@ -6,7 +6,7 @@ Functions related to getting scaffolds from input molecule(s).
 """
 
 import pandas as pd
-from scaffolds.hiers import CustomHierS
+from utils.scaffolds.hiers import CustomHierS
 
 
 # NOTE: the functions/lines in scaffolds.hiers and below should match exactly what was used in generate_scaffolds.py

@@ -7,8 +7,7 @@ API call for getting scaffolds using HierS algo.
 
 from flasgger import swag_from
 from flask import Blueprint, abort, jsonify, request
-
-from app.utils.process_scaffolds import get_scaffolds_single_mol
+from utils.process_scaffolds import get_scaffolds_single_mol
 
 hiers_api = Blueprint("hiers", __name__, url_prefix="/hiers")
 
