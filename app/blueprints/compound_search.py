@@ -11,7 +11,8 @@ from database.database import BadappleDB
 from flasgger import swag_from
 from flask import Blueprint, abort, jsonify, request
 from utils.request_processing import process_integer_list_input, process_list_input
-from utils.scaffold_utils import get_scaffolds_single_mol
+
+from app.utils.process_scaffolds import get_scaffolds_single_mol
 
 compound_search = Blueprint("compound_search", __name__, url_prefix="/compound_search")
 
