@@ -35,3 +35,21 @@ The `compose-production.yml` file will spin up the Badapple2 website (DB, API, a
 * If you are noticing some UI changes not showing up you may need to clear your browser cache
 * You will likely need to clear the docker cache if you've made changes to the DB
 * If you've pushed changes to the UI and docker is still using the cached github context, try changing UI build context to either a specific branch or commit. See https://docs.docker.com/reference/compose-file/build/#attributes for more info.
+* In extreme cases you may need to go in and manually override the DB. I still do not know what the reason is for this, but there are times when even after updating the .pgdump file the DB state will not be changed (even after clearing cache etc). These steps are what I've found work:
+1. Connect to the DB container: `docker exec -it <container_id> sh`
+2. (If necessary) re-download the .pgdump file. For example:
+```
+wget --no-cache -O /tmp/badapple_classic.pgdump https://unmtid-dbs.net/download/Badapple2/badapple_classic.pgdump
+```
+3. Change to postgres user: `sudo -i -u postgres`
+4. Run pg_restore on the DB with the .pgdump file: 
+```
+pg_restore --clean -O -x -v -d ${DB_NAME} <PATH_TO_PGDUMP_FILE>
+```
+5. Grant privileges back to DB_USER:
+```
+psql -p ${DB_PORT} -d ${DB_NAME} -c "GRANT SELECT ON ALL TABLES IN SCHEMA public TO ${DB_USER}" 
+psql -p ${DB_PORT} -d ${DB_NAME} -c "GRANT SELECT ON ALL SEQUENCES IN SCHEMA public TO ${DB_USER}"
+psql -p ${DB_PORT} -d ${DB_NAME} -c "GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO ${DB_USER}"
+```
+6. Exit DB container.
