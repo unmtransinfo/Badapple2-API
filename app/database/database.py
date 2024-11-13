@@ -9,7 +9,7 @@ import psycopg2
 import psycopg2.extras
 from flask import abort, current_app
 from psycopg2 import sql
-from utils.type_check import int_check
+from utils.request_processing import int_check
 
 
 class BadappleDB:

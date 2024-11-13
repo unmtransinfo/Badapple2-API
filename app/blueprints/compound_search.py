@@ -7,24 +7,30 @@ Blueprint for searching Badapple DB for data from compound inputs.
 
 from collections import defaultdict
 
+from config import MAX_RING_LOWER_BOUND, MAX_RING_UPPER_BOUND
 from database.database import BadappleDB
 from flasgger import swag_from
 from flask import Blueprint, abort, jsonify, request
-from utils.request_processing import process_integer_list_input, process_list_input
-from utils.scaffold_utils import get_scaffolds_single_mol
+from utils.process_scaffolds import get_scaffolds_single_mol
+from utils.request_processing import (
+    get_max_rings,
+    process_integer_list_input,
+    process_list_input,
+)
 
 compound_search = Blueprint("compound_search", __name__, url_prefix="/compound_search")
 
 
-def _get_associated_scaffolds_from_list(smiles_list: list[str]) -> dict[str, list]:
+def _get_associated_scaffolds_from_list(
+    smiles_list: list[str], max_rings: int
+) -> dict[str, list]:
     """
     Helper function, returns a dictionary mapping SMILES to associated scaffolds + info.
     """
     result = {}
 
     for smiles in smiles_list:
-        # original code uses ring_cutoff=30, hence why using it here
-        scaf_res = get_scaffolds_single_mol(smiles, name="", ring_cutoff=30)
+        scaf_res = get_scaffolds_single_mol(smiles, name="", max_rings=max_rings)
         if scaf_res == {}:
             # ignore invalid SMILES
             continue
@@ -58,6 +64,16 @@ def _get_associated_scaffolds_from_list(smiles_list: list[str]) -> dict[str, lis
                 "required": True,
                 "description": "List of compound SMILES, comma-separated. Invalid SMILES are ignored.",
             },
+            {
+                "name": "max_rings",
+                "in": "query",
+                "type": "integer",
+                "default": 10,
+                "required": False,
+                "description": "Ignore molecules with more than the specified number of ring systems to avoid extended processing times",
+                "minimum": MAX_RING_LOWER_BOUND,
+                "maximum": MAX_RING_UPPER_BOUND,
+            },
         ],
         "responses": {
             200: {
@@ -72,7 +88,8 @@ def get_associated_scaffolds():
     Return associated scaffolds + info on each, dictionary from input SMILES->scaffolds.
     """
     smiles_list = process_list_input(request, "SMILES", 1000)
-    result = _get_associated_scaffolds_from_list(smiles_list)
+    max_rings = get_max_rings(request)
+    result = _get_associated_scaffolds_from_list(smiles_list, max_rings)
     return jsonify(result)
 
 
@@ -94,6 +111,16 @@ def get_associated_scaffolds():
                 "required": False,
                 "description": "List of compound names, comma-separated.",
             },
+            {
+                "name": "max_rings",
+                "in": "query",
+                "type": "integer",
+                "default": 10,
+                "required": False,
+                "description": "Ignore molecules with more than the specified number of ring systems to avoid extended processing times",
+                "minimum": MAX_RING_LOWER_BOUND,
+                "maximum": MAX_RING_UPPER_BOUND,
+            },
         ],
         "responses": {
             200: {
@@ -108,6 +135,7 @@ def get_associated_scaffolds_ordered():
     Return associated scaffolds + info on each, list in order of input.
     """
     smiles_list = process_list_input(request, "SMILES", 1000)
+    max_rings = get_max_rings(request)
     name_list = smiles_list
     names_given = "Names" in request.args
     if names_given:
@@ -117,7 +145,7 @@ def get_associated_scaffolds_ordered():
                 400,
                 f"Length of 'SMILES' and 'Names' list expected to match, but got lengths: {len(smiles_list)} and {len(name_list)}",
             )
-    smiles2scaffolds = _get_associated_scaffolds_from_list(smiles_list)
+    smiles2scaffolds = _get_associated_scaffolds_from_list(smiles_list, max_rings)
     # order output
     # one could optimize/re-write _get_associated_scaffolds_from_list for this API call, but not expecting to deal with large inputs
     result = []
@@ -143,6 +171,16 @@ def get_associated_scaffolds_ordered():
                 "required": True,
                 "description": "List of compound SMILES, comma-separated. Invalid SMILES are ignored.",
             },
+            {
+                "name": "max_rings",
+                "in": "query",
+                "type": "integer",
+                "default": 10,
+                "required": False,
+                "description": "Ignore molecules with more than the specified number of ring systems to avoid extended processing times",
+                "minimum": MAX_RING_LOWER_BOUND,
+                "maximum": MAX_RING_UPPER_BOUND,
+            },
         ],
         "responses": {
             200: {
@@ -157,7 +195,8 @@ def get_high_scores():
     Return highest-scoring scaffold for each molecule.
     """
     smiles_list = process_list_input(request, "SMILES", 1000)
-    associated_scaffolds = _get_associated_scaffolds_from_list(smiles_list)
+    max_rings = get_max_rings(request)
+    associated_scaffolds = _get_associated_scaffolds_from_list(smiles_list, max_rings)
     result = []
     for smiles in associated_scaffolds.keys():
         scaffolds = associated_scaffolds[smiles]
