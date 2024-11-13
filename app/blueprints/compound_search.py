@@ -7,12 +7,16 @@ Blueprint for searching Badapple DB for data from compound inputs.
 
 from collections import defaultdict
 
+from config import MAX_RING_LOWER_BOUND, MAX_RING_UPPER_BOUND
 from database.database import BadappleDB
 from flasgger import swag_from
 from flask import Blueprint, abort, jsonify, request
 from utils.process_scaffolds import get_scaffolds_single_mol
-from utils.request_processing import process_integer_list_input, process_list_input
-from utils.type_check import int_check
+from utils.request_processing import (
+    get_max_rings,
+    process_integer_list_input,
+    process_list_input,
+)
 
 compound_search = Blueprint("compound_search", __name__, url_prefix="/compound_search")
 
@@ -67,6 +71,8 @@ def _get_associated_scaffolds_from_list(
                 "default": 10,
                 "required": False,
                 "description": "Ignore molecules with more than the specified number of ring systems to avoid extended processing times",
+                "minimum": MAX_RING_LOWER_BOUND,
+                "maximum": MAX_RING_UPPER_BOUND,
             },
         ],
         "responses": {
@@ -82,8 +88,7 @@ def get_associated_scaffolds():
     Return associated scaffolds + info on each, dictionary from input SMILES->scaffolds.
     """
     smiles_list = process_list_input(request, "SMILES", 1000)
-    max_rings = request.args.get("max_rings", type=int) or 10
-    max_rings = int_check(max_rings, "max_rings")
+    max_rings = get_max_rings(request)
     result = _get_associated_scaffolds_from_list(smiles_list, max_rings)
     return jsonify(result)
 
@@ -113,6 +118,8 @@ def get_associated_scaffolds():
                 "default": 10,
                 "required": False,
                 "description": "Ignore molecules with more than the specified number of ring systems to avoid extended processing times",
+                "minimum": MAX_RING_LOWER_BOUND,
+                "maximum": MAX_RING_UPPER_BOUND,
             },
         ],
         "responses": {
@@ -128,8 +135,7 @@ def get_associated_scaffolds_ordered():
     Return associated scaffolds + info on each, list in order of input.
     """
     smiles_list = process_list_input(request, "SMILES", 1000)
-    max_rings = request.args.get("max_rings", type=int) or 10
-    max_rings = int_check(max_rings, "max_rings")
+    max_rings = get_max_rings(request)
     name_list = smiles_list
     names_given = "Names" in request.args
     if names_given:
@@ -165,6 +171,16 @@ def get_associated_scaffolds_ordered():
                 "required": True,
                 "description": "List of compound SMILES, comma-separated. Invalid SMILES are ignored.",
             },
+            {
+                "name": "max_rings",
+                "in": "query",
+                "type": "integer",
+                "default": 10,
+                "required": False,
+                "description": "Ignore molecules with more than the specified number of ring systems to avoid extended processing times",
+                "minimum": MAX_RING_LOWER_BOUND,
+                "maximum": MAX_RING_UPPER_BOUND,
+            },
         ],
         "responses": {
             200: {
@@ -179,8 +195,7 @@ def get_high_scores():
     Return highest-scoring scaffold for each molecule.
     """
     smiles_list = process_list_input(request, "SMILES", 1000)
-    max_rings = request.args.get("max_rings", type=int) or 10
-    max_rings = int_check(max_rings, "max_rings")
+    max_rings = get_max_rings(request)
     associated_scaffolds = _get_associated_scaffolds_from_list(smiles_list, max_rings)
     result = []
     for smiles in associated_scaffolds.keys():
