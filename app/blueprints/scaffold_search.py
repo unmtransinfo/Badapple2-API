@@ -5,9 +5,11 @@ Description:
 Blueprint for searching Badapple DB for data from scaffold inputs.
 """
 
-from database.badapple_classic import BadappleClassicDB
+from config import ALLOWED_DB_NAMES
+from database import badapple
 from flasgger import swag_from
 from flask import Blueprint, jsonify, request
+from utils.request_processing import get_database
 
 scaffold_search = Blueprint("scaffold_search", __name__, url_prefix="/scaffold_search")
 
@@ -23,6 +25,15 @@ scaffold_search = Blueprint("scaffold_search", __name__, url_prefix="/scaffold_s
                 "required": True,
                 "description": "ID of scaffold.",
             },
+            {
+                "name": "database",
+                "in": "query",
+                "type": "str",
+                "default": ALLOWED_DB_NAMES[0],
+                "required": False,
+                "description": f"Database to fetch information from",
+                "enum": ALLOWED_DB_NAMES,
+            },
         ],
         "responses": {
             200: {
@@ -37,7 +48,8 @@ def get_associated_compounds():
     Return all PubChem compounds in the DB known to be associated with the given scaffold ID.
     """
     scafid = request.args.get("scafid", type=int)
-    result = BadappleClassicDB.get_associated_compounds(scafid)
+    database = get_database(request)
+    result = badapple.get_associated_compounds(scafid, database)
     return jsonify(result)
 
 
@@ -51,6 +63,15 @@ def get_associated_compounds():
                 "type": "integer",
                 "required": True,
                 "description": "ID of scaffold.",
+            },
+            {
+                "name": "database",
+                "in": "query",
+                "type": "str",
+                "default": ALLOWED_DB_NAMES[0],
+                "required": False,
+                "description": f"Database to fetch information from",
+                "enum": ALLOWED_DB_NAMES,
             },
         ],
         "responses": {
@@ -66,6 +87,7 @@ def get_associated_assay_ids():
     Return all PubChem assay IDs in the DB known to be associated with the given scaffold ID.
     """
     scafid = request.args.get("scafid", type=int)
-    result = BadappleClassicDB.get_associated_assay_ids(scafid)
+    database = get_database(request)
+    result = badapple.get_associated_assay_ids(scafid, database)
     result = [d["aid"] for d in result]
     return jsonify(result)
