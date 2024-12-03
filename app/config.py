@@ -16,4 +16,4 @@ DB_PORT = int(environ.get("DB_PORT"))
 # API limits
 # limits on max rings
 MAX_RING_LOWER_BOUND = 1
-MAX_RING_UPPER_BOUND = 15
+MAX_RING_UPPER_BOUND = 10
