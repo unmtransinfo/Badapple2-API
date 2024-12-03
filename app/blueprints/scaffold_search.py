@@ -12,11 +12,13 @@ from flask import Blueprint, jsonify, request
 from utils.request_processing import get_database
 
 scaffold_search = Blueprint("scaffold_search", __name__, url_prefix="/scaffold_search")
+TAGS = ["Scaffold Search"]
 
 
 @scaffold_search.route("/get_associated_compounds", methods=["GET"])
 @swag_from(
     {
+        "tags": TAGS,
         "parameters": [
             {
                 "name": "scafid",
@@ -56,6 +58,7 @@ def get_associated_compounds():
 @scaffold_search.route("/get_associated_assay_ids", methods=["GET"])
 @swag_from(
     {
+        "tags": TAGS,
         "parameters": [
             {
                 "name": "scafid",

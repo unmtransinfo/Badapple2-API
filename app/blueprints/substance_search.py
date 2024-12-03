@@ -14,11 +14,13 @@ from utils.request_processing import get_database
 substance_search = Blueprint(
     "substance_search", __name__, url_prefix="/substance_search"
 )
+TAGS = ["Substance Search"]
 
 
 @substance_search.route("/get_assay_outcomes", methods=["GET"])
 @swag_from(
     {
+        "tags": TAGS,
         "parameters": [
             {
                 "name": "SID",

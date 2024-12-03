@@ -20,6 +20,7 @@ from utils.request_processing import (
 )
 
 compound_search = Blueprint("compound_search", __name__, url_prefix="/compound_search")
+TAGS = ["Compound Search"]
 
 
 def _get_associated_scaffolds_from_list(
@@ -57,6 +58,7 @@ def _get_associated_scaffolds_from_list(
 @compound_search.route("/get_associated_scaffolds", methods=["GET"])
 @swag_from(
     {
+        "tags": TAGS,
         "parameters": [
             {
                 "name": "SMILES",
@@ -107,6 +109,7 @@ def get_associated_scaffolds():
 @compound_search.route("/get_associated_scaffolds_ordered", methods=["GET"])
 @swag_from(
     {
+        "tags": TAGS,
         "parameters": [
             {
                 "name": "SMILES",
@@ -186,6 +189,7 @@ def get_associated_scaffolds_ordered():
 @compound_search.route("/get_high_scores", methods=["GET"])
 @swag_from(
     {
+        "tags": TAGS,
         "parameters": [
             {
                 "name": "SMILES",
@@ -258,6 +262,7 @@ def get_high_scores():
 @compound_search.route("/get_associated_substance_ids", methods=["GET"])
 @swag_from(
     {
+        "tags": TAGS,
         "parameters": [
             {
                 "name": "CIDs",
