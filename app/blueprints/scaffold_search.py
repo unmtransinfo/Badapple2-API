@@ -5,7 +5,7 @@ Description:
 Blueprint for searching Badapple DB for data from scaffold inputs.
 """
 
-from database.database import BadappleDB
+from database.badapple_classic import BadappleClassicDB
 from flasgger import swag_from
 from flask import Blueprint, jsonify, request
 
@@ -37,7 +37,7 @@ def get_associated_compounds():
     Return all PubChem compounds in the DB known to be associated with the given scaffold ID.
     """
     scafid = request.args.get("scafid", type=int)
-    result = BadappleDB.get_associated_compounds(scafid)
+    result = BadappleClassicDB.get_associated_compounds(scafid)
     return jsonify(result)
 
 
@@ -66,6 +66,6 @@ def get_associated_assay_ids():
     Return all PubChem assay IDs in the DB known to be associated with the given scaffold ID.
     """
     scafid = request.args.get("scafid", type=int)
-    result = BadappleDB.get_associated_assay_ids(scafid)
+    result = BadappleClassicDB.get_associated_assay_ids(scafid)
     result = [d["aid"] for d in result]
     return jsonify(result)

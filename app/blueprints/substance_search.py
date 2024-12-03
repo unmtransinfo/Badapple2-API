@@ -5,7 +5,7 @@ Description:
 API calls with substance (SID) inputs.
 """
 
-from database.database import BadappleDB
+from database.badapple_classic import BadappleClassicDB
 from flasgger import swag_from
 from flask import Blueprint, jsonify, request
 
@@ -39,5 +39,5 @@ def get_assay_outcomes():
     Get a list of all PubChem assays (AIDs) associated with the SID in the DB, with outcomes.
     """
     sid = request.args.get("SID", type=int)
-    result = BadappleDB.get_assay_outcomes(sid)
+    result = BadappleClassicDB.get_assay_outcomes(sid)
     return jsonify(result)

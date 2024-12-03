@@ -2,7 +2,7 @@
 @author Jack Ringer
 Date: 8/28/2024
 Description:
-Class for operations with Badapple2 (+Badapple comparison) DB.
+Class for operations with badapple_classic.
 """
 
 import psycopg2
@@ -12,7 +12,7 @@ from psycopg2 import sql
 from utils.request_processing import int_check
 
 
-class BadappleDB:
+class BadappleClassicDB:
     @staticmethod
     def connect():
         return psycopg2.connect(
@@ -25,7 +25,7 @@ class BadappleDB:
 
     @staticmethod
     def select(query: sql.SQL):
-        connection = BadappleDB.connect()
+        connection = BadappleClassicDB.connect()
         cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         try:
             cursor.execute(query)
@@ -43,7 +43,7 @@ class BadappleDB:
         query = sql.SQL("SELECT isosmi from compound where cid={cid} LIMIT 1").format(
             cid=sql.Literal(cid)
         )
-        result = BadappleDB.select(query)
+        result = BadappleClassicDB.select(query)
         return result
 
     def search_scaffold(scafsmi: str):
@@ -52,7 +52,7 @@ class BadappleDB:
         query = sql.SQL(
             "SELECT * from scaffold where scafsmi={scafsmi} LIMIT 1"
         ).format(scafsmi=sql.Literal(scafsmi))
-        result = BadappleDB.select(query)
+        result = BadappleClassicDB.select(query)
         return result
 
     def get_associated_compounds(scafid: int):
@@ -60,7 +60,7 @@ class BadappleDB:
         query = sql.SQL(
             "select * from compound where cid IN (select cid from scaf2cpd where scafid={scafid})"
         ).format(scafid=sql.Literal(scafid))
-        result = BadappleDB.select(query)
+        result = BadappleClassicDB.select(query)
         return result
 
     def get_associated_sids(cid_list: list[int]):
@@ -68,7 +68,7 @@ class BadappleDB:
         query = sql.SQL("SELECT * FROM sub2cpd WHERE cid IN ({cid_list})").format(
             cid_list=formatted_cid_list
         )
-        result = BadappleDB.select(query)
+        result = BadappleClassicDB.select(query)
         return result
 
     def get_associated_assay_ids(scafid: int):
@@ -86,7 +86,7 @@ WHERE sid IN (
     )
 ) ORDER BY aid;"""
         ).format(scafid=sql.Literal(scafid))
-        result = BadappleDB.select(query)
+        result = BadappleClassicDB.select(query)
         return result
 
     def get_assay_outcomes(sid: int):
@@ -94,5 +94,5 @@ WHERE sid IN (
         query = sql.SQL("SELECT aid,outcome FROM activity WHERE sid={sid}").format(
             sid=sql.Literal(sid)
         )
-        result = BadappleDB.select(query)
+        result = BadappleClassicDB.select(query)
         return result

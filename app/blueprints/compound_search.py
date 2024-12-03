@@ -8,7 +8,7 @@ Blueprint for searching Badapple DB for data from compound inputs.
 from collections import defaultdict
 
 from config import MAX_RING_LOWER_BOUND, MAX_RING_UPPER_BOUND
-from database.database import BadappleDB
+from database.badapple_classic import BadappleClassicDB
 from flasgger import swag_from
 from flask import Blueprint, abort, jsonify, request
 from utils.process_scaffolds import get_scaffolds_single_mol
@@ -38,7 +38,7 @@ def _get_associated_scaffolds_from_list(
         scaffolds = scaf_res["scaffolds"]
         scaffold_info_list = []
         for scafsmi in scaffolds:
-            scaf_info = BadappleDB.search_scaffold(scafsmi)
+            scaf_info = BadappleClassicDB.search_scaffold(scafsmi)
             if len(scaf_info) < 1:
                 scaf_info = {
                     "scafsmi": scafsmi,
@@ -245,7 +245,7 @@ def get_associated_substance_ids():
     Get SubstanceIDs (SIDs) associated with the input CompoundIDs (CIDs) in the DB.
     """
     cid_list = process_integer_list_input(request, "CIDs", 1000)
-    result = BadappleDB.get_associated_sids(cid_list)
+    result = BadappleClassicDB.get_associated_sids(cid_list)
 
     # combine dicts with shared CID
     combined_result = defaultdict(list)
