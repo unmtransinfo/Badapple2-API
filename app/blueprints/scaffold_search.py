@@ -15,6 +15,50 @@ scaffold_search = Blueprint("scaffold_search", __name__, url_prefix="/scaffold_s
 TAGS = ["Scaffold Search"]
 
 
+@scaffold_search.route("/get_scaffold_id", methods=["GET"])
+@swag_from(
+    {
+        "tags": TAGS,
+        "parameters": [
+            {
+                "name": "SMILES",
+                "in": "query",
+                "type": "string",
+                "required": True,
+                "description": "SMILES string representing scaffold",
+            },
+            {
+                "name": "database",
+                "in": "query",
+                "type": "str",
+                "default": ALLOWED_DB_NAMES[0],
+                "required": False,
+                "description": f"Database to fetch information from",
+                "enum": ALLOWED_DB_NAMES,
+            },
+        ],
+        "responses": {
+            200: {
+                "description": "Fetch the scaffoldID (scafid) of the given scaffold using structural search. Note that the scafid for the same scaffold can differ between databases."
+            },
+            400: {"description": "Malformed request error"},
+        },
+    }
+)
+def get_scaffold_id():
+    """
+    Return the scafid of the given scaffold, null if scaffold not found in DB.
+    """
+    scaf_smiles = request.args.get("SMILES", type=str)
+    database = get_database(request)
+    result = badapple.get_scaffold_id(scaf_smiles, database)
+    if result and len(result) > 0:
+        result = result[0]["id"]
+    else:
+        result = None
+    return jsonify(result)
+
+
 @scaffold_search.route("/get_associated_compounds", methods=["GET"])
 @swag_from(
     {
@@ -96,6 +140,7 @@ def get_associated_assay_ids():
     return jsonify(result)
 
 
+# badapple2+ only
 @scaffold_search.route("/get_active_targets", methods=["GET"])
 @swag_from(
     {

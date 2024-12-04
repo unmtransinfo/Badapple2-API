@@ -51,12 +51,26 @@ def index_compound(cid: int, db_name: str):
 
 
 def search_scaffold(scafsmi: str, db_name: str):
+    # here we assume the given scafsmi is None if it was not a valid SMILES
+    # and that the scafsmi was canonicalized (much faster to search scafsmi than use structural search!)
     if scafsmi is None:
         return abort(400, "Invalid SMILES provided")
     query = sql.SQL("SELECT * from scaffold where scafsmi={scafsmi} LIMIT 1").format(
         scafsmi=sql.Literal(scafsmi)
     )
     return select(query, db_name)
+
+
+def get_scaffold_id(scafsmi: str, db_name: str):
+    query = sql.SQL("SELECT id FROM mols_scaf WHERE scafmol @= {scafsmi};").format(
+        scafsmi=sql.Literal(scafsmi)
+    )
+    result = None
+    try:
+        result = select(query, db_name)
+    except psycopg2.errors.DataException:
+        return abort(400, "Invalid SMILES provided")
+    return result
 
 
 def get_associated_compounds(scafid: int, db_name: str):
