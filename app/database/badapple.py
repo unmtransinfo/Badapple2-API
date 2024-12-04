@@ -118,6 +118,7 @@ def get_assay_outcomes(sid: int, db_name: str):
 # badapple2+ only
 def get_active_targets(scafid: int, db_name: str = "badapple2"):
     # TODO: move this int_check code into request_processing.py for all functions
+    # TODO: format SQL statements
     scafid = int_check(scafid, "scafid")
     query = sql.SQL(
         """
@@ -136,5 +137,13 @@ WHERE
 scaf2activeaid.scafid = {scafid}
 ORDER BY aid;
 """
+    ).format(scafid=sql.Literal(scafid))
+    return select(query, db_name)
+
+
+def get_associated_drugs(scafid: int, db_name: str = "badapple2"):
+    scafid = int_check(scafid, "scafid")
+    query = sql.SQL(
+        "SELECT * FROM drug WHERE drug_id IN (SELECT drug_id FROM scaf2drug WHERE scafid={scafid});"
     ).format(scafid=sql.Literal(scafid))
     return select(query, db_name)

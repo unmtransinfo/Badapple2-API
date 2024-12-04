@@ -181,3 +181,43 @@ def get_active_targets():
     )
     result = badapple.get_active_targets(scafid, database)
     return jsonify(result)
+
+
+@scaffold_search.route("/get_associated_drugs", methods=["GET"])
+@swag_from(
+    {
+        "tags": TAGS,
+        "parameters": [
+            {
+                "name": "scafid",
+                "in": "query",
+                "type": "integer",
+                "required": True,
+                "description": "ID of scaffold.",
+            },
+            {
+                "name": "database",
+                "in": "query",
+                "type": "str",
+                "default": ALLOWED_DB_NAMES[1],
+                "required": False,
+                "description": f"Database to fetch information from",
+                "enum": [ALLOWED_DB_NAMES[1]],  # badapple2+ only
+            },
+        ],
+        "responses": {
+            200: {"description": "Completed request without issue"},
+            400: {"description": "Malformed request error"},
+        },
+    }
+)
+def get_associated_drugs():
+    """
+    Return list of approved drugs (DrugCentral IDs, SMILES, and INN) the given scaffold is present in.
+    """
+    scafid = request.args.get("scafid", type=int)
+    database = get_database(
+        request, default_val=ALLOWED_DB_NAMES[1], allowed_db_names=[ALLOWED_DB_NAMES[1]]
+    )
+    result = badapple.get_associated_drugs(scafid, database)
+    return jsonify(result)
