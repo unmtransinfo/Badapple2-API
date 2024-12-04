@@ -99,3 +99,28 @@ def get_assay_outcomes(sid: int, db_name: str):
         sid=sql.Literal(sid)
     )
     return select(query, db_name)
+
+
+# badapple2+ only
+def get_active_targets(scafid: int, db_name: str = "badapple2"):
+    # TODO: move this int_check code into request_processing.py for all functions
+    scafid = int_check(scafid, "scafid")
+    query = sql.SQL(
+        """
+SELECT 
+target.*, 
+scaf2activeaid.aid 
+FROM 
+target
+JOIN 
+aid2target 
+ON target.target_id = aid2target.target_id
+JOIN 
+scaf2activeaid 
+ON aid2target.aid = scaf2activeaid.aid
+WHERE 
+scaf2activeaid.scafid = {scafid}
+ORDER BY aid;
+"""
+    ).format(scafid=sql.Literal(scafid))
+    return select(query, db_name)
