@@ -127,10 +127,10 @@ target.*,
 scaf2activeaid.aid 
 FROM 
 target
-JOIN 
+RIGHT JOIN  
 aid2target 
 ON target.target_id = aid2target.target_id
-JOIN 
+RIGHT JOIN  
 scaf2activeaid 
 ON aid2target.aid = scaf2activeaid.aid
 WHERE 

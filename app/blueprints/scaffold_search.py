@@ -173,14 +173,21 @@ def get_associated_assay_ids():
 )
 def get_active_targets():
     """
-    Return the biological targets where the given scafid was present in an 'active' substance, along with corresponding PubChem AssayIDs.
+    Return the PubChem AssayIDs (aid) and corresponding biological targets where the given scafid was present in an 'active' substance. Note that not all PubChem assay records have explicit target information.
     """
     scafid = request.args.get("scafid", type=int)
     database = get_database(
         request, default_val=ALLOWED_DB_NAMES[1], allowed_db_names=[ALLOWED_DB_NAMES[1]]
     )
     result = badapple.get_active_targets(scafid, database)
-    return jsonify(result)
+    processed_result = []
+    for d in result:
+        if d["external_id"] is None:
+            # assay had no target
+            processed_result.append({"aid": d["aid"]})
+        else:
+            processed_result.append(d)
+    return jsonify(processed_result)
 
 
 @scaffold_search.route("/get_associated_drugs", methods=["GET"])
