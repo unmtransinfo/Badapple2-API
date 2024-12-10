@@ -27,4 +27,8 @@ APP_NAME=Badapple2-API
 # (line: proxy_pass http://badapple_api:8001/)
 APP_PORT=8001
 APP_URL=chiltepin.health.unm.edu/badapple2
-VITE_API_HOST=https://chiltepin.health.unm.edu/badapple2/api/v1/compound_search/get_associated_scaffolds_ordered
+VITE_API_FETCH_SCAFFOLDS_URL=https://${APP_URL}/api/v1/compound_search/get_associated_scaffolds_ordered
+VITE_API_FETCH_DRUGS_URL=https://${APP_URL}/api/v1/scaffold_search/get_associated_drugs
+VITE_API_FETCH_TARGETS_URL=https://${APP_URL}/api/v1/scaffold_search/get_active_targets
+VITE_DB_NAME=${DB_NAME}
+VITE_DB2_NAME=${DB2_NAME}
