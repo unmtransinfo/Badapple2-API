@@ -1,4 +1,4 @@
-from blueprints.version import version
+from blueprints.version import register_routes
 from dotenv import load_dotenv
 from flasgger import Swagger
 from flask import Flask
@@ -10,6 +10,7 @@ def create_app():
     # Load config
     load_dotenv(".env")
     app.config.from_pyfile("config.py")
+    version_str = app.config.get("VERSION", "1")
 
     # Enhanced CORS configuration
     CORS(app, resources={r"/*": {"origins": "*"}})
@@ -28,15 +29,12 @@ def create_app():
         "info": {
             "title": "API for Badapple databases",
             "description": "API which allows for programmatic access to badapple_classic and badapple2 DBs.",
-            "version": "0.0.1",
+            "version": version_str,
         },
     }
 
     swagger = Swagger(app, config=swagger_config)
-
-    # Register routes
-    app.register_blueprint(version)
-
+    register_routes(app, version_str)
     return app
 
 
