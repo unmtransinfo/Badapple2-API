@@ -1,8 +1,23 @@
-TZ=America/Denver
+FLASK_ENV="production"
+VERSION="1"
+
+# specs for badapple_classic
+DB_HOST=
 DB_NAME=badapple_classic
 DB_USER=
 DB_PASSWORD=
-DB_PORT=5443
+DB_PORT=
+
+# specs for badapple2
+DB2_HOST=
+DB2_NAME=badapple2
+DB2_USER=
+DB2_PASSWORD=
+DB2_PORT=
+
+# timezone
+TZ=America/Denver
+
 # you will need to edit the apache config with the SSL port here
 BADAPPLE_NGINX_SSL_PORT=
 BADAPPLE_NGINX_HTTP_PORT=
