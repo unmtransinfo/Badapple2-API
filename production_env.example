@@ -2,7 +2,6 @@ FLASK_ENV="production"
 VERSION="1"
 
 # specs for badapple_classic
-DB_HOST=
 DB_NAME=badapple_classic
 DB_USER=
 DB_PASSWORD=
@@ -11,7 +10,6 @@ DB_PGDUMP_URL="https://unmtid-dbs.net/download/Badapple2/badapple_classic.pgdump
 
 # specs for badapple2
 # NOTE: DB2_PORT should be different than DB_PORT
-DB2_HOST=
 DB2_NAME=badapple2
 DB2_USER=
 DB2_PASSWORD=
