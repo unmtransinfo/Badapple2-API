@@ -2,13 +2,14 @@ services:
   badapple_db:
     restart: always
     build:
-      context: https://github.com/unmtransinfo/Badapple2.git#main
-      dockerfile: Dockerfile_BA_classic
+      context: https://github.com/unmtransinfo/Badapple2.git#badapple2_db
+      dockerfile: Dockerfile
       args:
         - DB_PORT=${DB_PORT}
         - DB_NAME=${DB_NAME}
         - DB_USER=${DB_USER}
         - DB_PASSWORD=${DB_PASSWORD}
+        - PGDUMP_URL=${DB_PGDUMP_URL}
         - TZ=${TZ}
     container_name: badapple_classic_db
     ports:
@@ -18,6 +19,7 @@ services:
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_PORT=${DB_PORT}
+      - PGDUMP_URL=${DB_PGDUMP_URL}
       - TZ=${TZ}
     env_file:
       - .env
@@ -25,6 +27,40 @@ services:
       - badapple_classic_data:/var/lib/postgresql/14/main
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -d ${DB_NAME} -p ${DB_PORT}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - badapple_backend
+  
+  badapple2_db:
+    restart: always
+    build:
+      context: https://github.com/unmtransinfo/Badapple2.git#badapple2_db
+      dockerfile: Dockerfile
+      args:
+        - DB_PORT=${DB2_PORT}
+        - DB_NAME=${DB2_NAME}
+        - DB_USER=${DB2_USER}
+        - DB_PASSWORD=${DB2_PASSWORD}
+        - PGDUMP_URL=${DB2_PGDUMP_URL}
+        - TZ=${TZ}
+    container_name: badapple2_db
+    ports:
+      - "127.0.0.1:${DB2_PORT}:${DB2_PORT}" # 127.0.0.1 to restrict to localhost
+    environment:
+      - DB_NAME=${DB2_NAME}
+      - DB_USER=${DB2_USER}
+      - DB_PASSWORD=${DB2_PASSWORD}
+      - DB_PORT=${DB2_PORT}
+      - PGDUMP_URL=${DB2_PGDUMP_URL}
+      - TZ=${TZ}
+    env_file:
+      - .env
+    volumes:
+      - badapple2_data:/var/lib/postgresql/14/main
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d ${DB2_NAME} -p ${DB2_PORT}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -42,10 +78,17 @@ services:
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_PORT=${DB_PORT}
+      - DB2_HOST=badapple2_db
+      - DB2_NAME=${DB2_NAME}
+      - DB2_USER=${DB2_USER}
+      - DB2_PASSWORD=${DB2_PASSWORD}
+      - DB2_PORT=${DB2_PORT}
     env_file:
       - .env
     depends_on:
       badapple_db:
+        condition: service_healthy
+      badapple2_db:
         condition: service_healthy
     networks:
       - badapple_backend
@@ -53,7 +96,7 @@ services:
 
   badapple_ui:
     build:
-      context: https://github.com/unmtransinfo/Badapple2-UI.git#main
+      context: https://github.com/unmtransinfo/Badapple2-UI.git#badapple2_db
     environment:
       - NODE_OPTIONS=--openssl-legacy-provider
     env_file:
@@ -84,6 +127,7 @@ services:
 
 volumes:
   badapple_classic_data:
+  badapple2_data:
   static_files_badapple:
   nginx:
 

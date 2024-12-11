@@ -12,11 +12,13 @@ from utils.process_scaffolds import get_scaffolds_single_mol
 from utils.request_processing import get_max_rings
 
 hiers_api = Blueprint("hiers", __name__, url_prefix="/hiers")
+TAGS = ["HierS"]
 
 
 @hiers_api.route("/get_scaffolds", methods=["GET"])
 @swag_from(
     {
+        "tags": TAGS,
         "parameters": [
             {
                 "name": "SMILES",

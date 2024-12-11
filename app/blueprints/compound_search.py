@@ -7,22 +7,24 @@ Blueprint for searching Badapple DB for data from compound inputs.
 
 from collections import defaultdict
 
-from config import MAX_RING_LOWER_BOUND, MAX_RING_UPPER_BOUND
-from database.database import BadappleDB
+from config import ALLOWED_DB_NAMES, MAX_RING_LOWER_BOUND, MAX_RING_UPPER_BOUND
+from database import badapple
 from flasgger import swag_from
 from flask import Blueprint, abort, jsonify, request
 from utils.process_scaffolds import get_scaffolds_single_mol
 from utils.request_processing import (
+    get_database,
     get_max_rings,
     process_integer_list_input,
     process_list_input,
 )
 
 compound_search = Blueprint("compound_search", __name__, url_prefix="/compound_search")
+TAGS = ["Compound Search"]
 
 
 def _get_associated_scaffolds_from_list(
-    smiles_list: list[str], max_rings: int
+    smiles_list: list[str], max_rings: int, db_name: str
 ) -> dict[str, list]:
     """
     Helper function, returns a dictionary mapping SMILES to associated scaffolds + info.
@@ -38,7 +40,7 @@ def _get_associated_scaffolds_from_list(
         scaffolds = scaf_res["scaffolds"]
         scaffold_info_list = []
         for scafsmi in scaffolds:
-            scaf_info = BadappleDB.search_scaffold(scafsmi)
+            scaf_info = badapple.search_scaffold(scafsmi, db_name)
             if len(scaf_info) < 1:
                 scaf_info = {
                     "scafsmi": scafsmi,
@@ -56,6 +58,7 @@ def _get_associated_scaffolds_from_list(
 @compound_search.route("/get_associated_scaffolds", methods=["GET"])
 @swag_from(
     {
+        "tags": TAGS,
         "parameters": [
             {
                 "name": "SMILES",
@@ -74,6 +77,15 @@ def _get_associated_scaffolds_from_list(
                 "minimum": MAX_RING_LOWER_BOUND,
                 "maximum": MAX_RING_UPPER_BOUND,
             },
+            {
+                "name": "database",
+                "in": "query",
+                "type": "str",
+                "default": ALLOWED_DB_NAMES[0],
+                "required": False,
+                "description": f"Database to fetch information from",
+                "enum": ALLOWED_DB_NAMES,
+            },
         ],
         "responses": {
             200: {
@@ -89,13 +101,15 @@ def get_associated_scaffolds():
     """
     smiles_list = process_list_input(request, "SMILES", 1000)
     max_rings = get_max_rings(request)
-    result = _get_associated_scaffolds_from_list(smiles_list, max_rings)
+    database = get_database(request)
+    result = _get_associated_scaffolds_from_list(smiles_list, max_rings, database)
     return jsonify(result)
 
 
 @compound_search.route("/get_associated_scaffolds_ordered", methods=["GET"])
 @swag_from(
     {
+        "tags": TAGS,
         "parameters": [
             {
                 "name": "SMILES",
@@ -121,6 +135,15 @@ def get_associated_scaffolds():
                 "minimum": MAX_RING_LOWER_BOUND,
                 "maximum": MAX_RING_UPPER_BOUND,
             },
+            {
+                "name": "database",
+                "in": "query",
+                "type": "str",
+                "default": ALLOWED_DB_NAMES[0],
+                "required": False,
+                "description": f"Database to fetch information from",
+                "enum": ALLOWED_DB_NAMES,
+            },
         ],
         "responses": {
             200: {
@@ -136,6 +159,7 @@ def get_associated_scaffolds_ordered():
     """
     smiles_list = process_list_input(request, "SMILES", 1000)
     max_rings = get_max_rings(request)
+    database = get_database(request)
     name_list = smiles_list
     names_given = "Names" in request.args
     if names_given:
@@ -145,7 +169,9 @@ def get_associated_scaffolds_ordered():
                 400,
                 f"Length of 'SMILES' and 'Names' list expected to match, but got lengths: {len(smiles_list)} and {len(name_list)}",
             )
-    smiles2scaffolds = _get_associated_scaffolds_from_list(smiles_list, max_rings)
+    smiles2scaffolds = _get_associated_scaffolds_from_list(
+        smiles_list, max_rings, database
+    )
     # order output
     # one could optimize/re-write _get_associated_scaffolds_from_list for this API call, but not expecting to deal with large inputs
     result = []
@@ -163,6 +189,7 @@ def get_associated_scaffolds_ordered():
 @compound_search.route("/get_high_scores", methods=["GET"])
 @swag_from(
     {
+        "tags": TAGS,
         "parameters": [
             {
                 "name": "SMILES",
@@ -181,6 +208,15 @@ def get_associated_scaffolds_ordered():
                 "minimum": MAX_RING_LOWER_BOUND,
                 "maximum": MAX_RING_UPPER_BOUND,
             },
+            {
+                "name": "database",
+                "in": "query",
+                "type": "str",
+                "default": ALLOWED_DB_NAMES[0],
+                "required": False,
+                "description": f"Database to fetch information from",
+                "enum": ALLOWED_DB_NAMES,
+            },
         ],
         "responses": {
             200: {
@@ -196,7 +232,10 @@ def get_high_scores():
     """
     smiles_list = process_list_input(request, "SMILES", 1000)
     max_rings = get_max_rings(request)
-    associated_scaffolds = _get_associated_scaffolds_from_list(smiles_list, max_rings)
+    database = get_database(request)
+    associated_scaffolds = _get_associated_scaffolds_from_list(
+        smiles_list, max_rings, database
+    )
     result = []
     for smiles in associated_scaffolds.keys():
         scaffolds = associated_scaffolds[smiles]
@@ -223,6 +262,7 @@ def get_high_scores():
 @compound_search.route("/get_associated_substance_ids", methods=["GET"])
 @swag_from(
     {
+        "tags": TAGS,
         "parameters": [
             {
                 "name": "CIDs",
@@ -230,6 +270,15 @@ def get_high_scores():
                 "type": "string",
                 "required": True,
                 "description": "List of compound PubChem CIDs, comma-separated.",
+            },
+            {
+                "name": "database",
+                "in": "query",
+                "type": "str",
+                "default": ALLOWED_DB_NAMES[0],
+                "required": False,
+                "description": f"Database to fetch information from",
+                "enum": ALLOWED_DB_NAMES,
             },
         ],
         "responses": {
@@ -245,7 +294,8 @@ def get_associated_substance_ids():
     Get SubstanceIDs (SIDs) associated with the input CompoundIDs (CIDs) in the DB.
     """
     cid_list = process_integer_list_input(request, "CIDs", 1000)
-    result = BadappleDB.get_associated_sids(cid_list)
+    database = get_database(request)
+    result = badapple.get_associated_sids(cid_list, database)
 
     # combine dicts with shared CID
     combined_result = defaultdict(list)

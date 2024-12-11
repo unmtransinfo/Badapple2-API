@@ -7,7 +7,7 @@ Functions related to parsing requests.
 
 from typing import Union
 
-from config import MAX_RING_LOWER_BOUND, MAX_RING_UPPER_BOUND
+from config import ALLOWED_DB_NAMES, MAX_RING_LOWER_BOUND, MAX_RING_UPPER_BOUND
 from flask import abort
 
 
@@ -37,6 +37,19 @@ def get_max_rings(request, default_val: int = 10):
         MAX_RING_UPPER_BOUND,
     )
     return max_rings
+
+
+def get_database(
+    request,
+    default_val: str = ALLOWED_DB_NAMES[0],
+    allowed_db_names: list[str] = ALLOWED_DB_NAMES,
+):
+    # ALLOWED_DB_NAMES[0] == "badapple_classic"
+    database = request.args.get("database", type=str) or default_val
+    if database not in allowed_db_names:
+        db_names = ",".join(allowed_db_names)
+        return abort(400, f"Invalid database provided, select from: {db_names}")
+    return database
 
 
 def process_list_input(request, param_name: str, limit: int):
