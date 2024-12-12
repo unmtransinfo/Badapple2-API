@@ -90,6 +90,8 @@ services:
         condition: service_healthy
       badapple2_db:
         condition: service_healthy
+    volumes:
+      - static_files_badapple_apidocs:/flasgger_static/
     networks:
       - badapple_backend
       - badapple_frontend
@@ -111,6 +113,7 @@ services:
     restart: always
     image: nginx:1
     volumes:
+      - static_files_badapple_apidocs:/usr/share/nginx/html/static_files_badapple_apidocs:ro
       - static_files_badapple:/usr/share/nginx/html/static_files_badapple:ro
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - nginx:/etc/nginx
@@ -129,6 +132,7 @@ volumes:
   badapple_classic_data:
   badapple2_data:
   static_files_badapple:
+  static_files_badapple_apidocs:
   nginx:
 
 networks:
