@@ -98,7 +98,7 @@ services:
 
   badapple_ui:
     build:
-      context: https://github.com/unmtransinfo/Badapple2-UI.git#main
+      context: https://github.com/unmtransinfo/Badapple2-UI.git#context_dec_11
     environment:
       - NODE_OPTIONS=--openssl-legacy-provider
     env_file:
