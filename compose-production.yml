@@ -91,7 +91,7 @@ services:
       badapple2_db:
         condition: service_healthy
     volumes:
-      - static_files_badapple_apidocs:/flasgger_static/
+      - static_files_badapple_apidocs:/app/flasgger_static/
     networks:
       - badapple_backend
       - badapple_frontend
