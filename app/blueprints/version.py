@@ -8,10 +8,9 @@ from blueprints.substance_search import substance_search
 from flask import Blueprint
 
 
-# TODO: make prefix part of config
-def register_routes(app, version_str: str = "1", prefix="/badapple2"):
+def register_routes(app, version_str: str = "1"):
     # Set the route prefix based on version
-    version = Blueprint("version", __name__, url_prefix=f"{prefix}/api/v{version_str}")
+    version = Blueprint("version", __name__, url_prefix=f"/api/v{version_str}")
     version.register_blueprint(hiers_api)
     version.register_blueprint(compound_search)
     version.register_blueprint(scaffold_search)
