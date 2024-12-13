@@ -38,10 +38,6 @@ def create_app():
     if app.config.get("FLASK_ENV", "production") == "production":
         template = dict(swaggerUiPrefix="/badapple2")
 
-        @app.route("/apidocs/apispec_1.json")
-        def rewrite_swagger_spec():
-            return redirect("/badapple2/apidocs/apispec_1.json")
-
     swagger = Swagger(app, config=swagger_config, template=template)
     register_routes(app, version_str)
     return app
