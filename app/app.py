@@ -1,12 +1,13 @@
 from blueprints.version import register_routes
 from dotenv import load_dotenv
-from flasgger import Swagger
-from flask import Flask
+from flasgger import LazyJSONEncoder, LazyString, Swagger
+from flask import Flask, request
 from flask_cors import CORS
 
 
 def create_app():
     app = Flask(__name__)
+    app.json_encoder = LazyJSONEncoder
     # Load config
     load_dotenv(".env")
     app.config.from_pyfile("config.py")
@@ -32,8 +33,11 @@ def create_app():
             "version": version_str,
         },
     }
-
-    swagger = Swagger(app, config=swagger_config)
+    template = {}
+    # TODO: set prefix in config
+    if app.config.get("FLASK_ENV", "production") == "production":
+        template = dict(swaggerUiPrefix="/badapple2")
+    swagger = Swagger(app, config=swagger_config, template=template)
     register_routes(app, version_str)
     return app
 
