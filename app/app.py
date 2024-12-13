@@ -1,12 +1,16 @@
+from os import environ
+
 from blueprints.version import register_routes
 from dotenv import load_dotenv
 from flasgger import LazyJSONEncoder, Swagger
-from flask import Flask, redirect
+from flask import Flask
 from flask_cors import CORS
 
 
 def create_app():
+    # this is to fix the UI not using the correct url for the spec route in prod
     app = Flask(__name__)
+
     app.json_encoder = LazyJSONEncoder
     # Load config
     load_dotenv(".env")
@@ -16,6 +20,8 @@ def create_app():
     # Enhanced CORS configuration
     CORS(app, resources={r"/*": {"origins": "*"}})
 
+    URL_PREFIX = app.config.get("URL_PREFIX", "")
+    IN_PROD = app.config.get("FLASK_ENV", "") == "production"
     swagger_config = {
         "headers": [],
         "specs": [
@@ -24,7 +30,7 @@ def create_app():
                 "route": "/apidocs/apispec_1.json",
             }
         ],
-        "static_url_path": "/badapple2/flasgger_static",
+        "static_url_path": f"/{URL_PREFIX}/flasgger_static",
         "swagger_ui": True,
         "specs_route": "/apidocs/",
         "info": {
@@ -32,11 +38,11 @@ def create_app():
             "description": "API which allows for programmatic access to badapple_classic and badapple2 DBs.",
             "version": version_str,
         },
+        "ui_params": {
+            "url_prefix": (f"/{URL_PREFIX}") if IN_PROD else "",
+        },
     }
-    template = {}
-    # TODO: set prefix in config
-    if app.config.get("FLASK_ENV", "production") == "production":
-        template = dict(swaggerUiPrefix="/badapple2")
+    template = {"swaggerUiPrefix": f"/{URL_PREFIX}" if IN_PROD else ""}
 
     swagger = Swagger(app, config=swagger_config, template=template)
     register_routes(app, version_str)
