@@ -23,7 +23,7 @@ def create_app():
                 "route": "/apidocs/apispec_1.json",
             }
         ],
-        "static_url_path": "/flasgger_static",
+        "static_url_path": "/badapple2/flasgger_static",
         "swagger_ui": True,
         "specs_route": "/apidocs/",
         "info": {
