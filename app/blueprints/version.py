@@ -12,7 +12,7 @@ def register_routes(app, in_production: bool, version_url_prefix: str):
     version = Blueprint("version", __name__, url_prefix=version_url_prefix)
     version.register_blueprint(compound_search)
     version.register_blueprint(scaffold_search)
-    if in_production:
+    if not (in_production):
         # do not register substance blueprint in prod bc
         # 1) we don't include the activity table in the DBs
         # 2) even if we did include the activity table, these API calls are quite computationally expensive
