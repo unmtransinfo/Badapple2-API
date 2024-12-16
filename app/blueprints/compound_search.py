@@ -3,13 +3,12 @@
 Date: 8/28/2024
 Description:
 Blueprint for searching Badapple DB for data from compound inputs.
+For information on what each of the API calls do see api_spec.yml.
 """
 
 from collections import defaultdict
 
-from config import ALLOWED_DB_NAMES, MAX_RING_LOWER_BOUND, MAX_RING_UPPER_BOUND
 from database import badapple
-from flasgger import swag_from
 from flask import Blueprint, abort, jsonify, request
 from utils.process_scaffolds import get_scaffolds_single_mol
 from utils.request_processing import (
@@ -20,7 +19,6 @@ from utils.request_processing import (
 )
 
 compound_search = Blueprint("compound_search", __name__, url_prefix="/compound_search")
-TAGS = ["Compound Search"]
 
 
 def _get_associated_scaffolds_from_list(
@@ -56,49 +54,7 @@ def _get_associated_scaffolds_from_list(
 
 
 @compound_search.route("/get_associated_scaffolds", methods=["GET"])
-@swag_from(
-    {
-        "tags": TAGS,
-        "parameters": [
-            {
-                "name": "SMILES",
-                "in": "query",
-                "type": "string",
-                "required": True,
-                "description": "List of compound SMILES, comma-separated. Invalid SMILES are ignored.",
-            },
-            {
-                "name": "max_rings",
-                "in": "query",
-                "type": "integer",
-                "default": 10,
-                "required": False,
-                "description": "Ignore molecules with more than the specified number of ring systems to avoid extended processing times",
-                "minimum": MAX_RING_LOWER_BOUND,
-                "maximum": MAX_RING_UPPER_BOUND,
-            },
-            {
-                "name": "database",
-                "in": "query",
-                "type": "str",
-                "default": ALLOWED_DB_NAMES[0],
-                "required": False,
-                "description": f"Database to fetch information from",
-                "enum": ALLOWED_DB_NAMES,
-            },
-        ],
-        "responses": {
-            200: {
-                "description": "A json object with all compounds and their associated scaffolds + their information. Note that if a scaffold is not present in the DB it will have an empty list instead of info."
-            },
-            400: {"description": "Malformed request error"},
-        },
-    }
-)
 def get_associated_scaffolds():
-    """
-    Return associated scaffolds + info on each, dictionary from input SMILES->scaffolds.
-    """
     smiles_list = process_list_input(request, "SMILES", 1000)
     max_rings = get_max_rings(request)
     database = get_database(request)
@@ -107,56 +63,7 @@ def get_associated_scaffolds():
 
 
 @compound_search.route("/get_associated_scaffolds_ordered", methods=["GET"])
-@swag_from(
-    {
-        "tags": TAGS,
-        "parameters": [
-            {
-                "name": "SMILES",
-                "in": "query",
-                "type": "string",
-                "required": True,
-                "description": "List of compound SMILES, comma-separated. ",
-            },
-            {
-                "name": "Names",
-                "in": "query",
-                "type": "string",
-                "required": False,
-                "description": "List of compound names, comma-separated.",
-            },
-            {
-                "name": "max_rings",
-                "in": "query",
-                "type": "integer",
-                "default": 10,
-                "required": False,
-                "description": "Ignore molecules with more than the specified number of ring systems to avoid extended processing times",
-                "minimum": MAX_RING_LOWER_BOUND,
-                "maximum": MAX_RING_UPPER_BOUND,
-            },
-            {
-                "name": "database",
-                "in": "query",
-                "type": "str",
-                "default": ALLOWED_DB_NAMES[0],
-                "required": False,
-                "description": f"Database to fetch information from",
-                "enum": ALLOWED_DB_NAMES,
-            },
-        ],
-        "responses": {
-            200: {
-                "description": "A json object with all compounds and their associated scaffolds. The data will be in the same order as the given list of SMILES/Names."
-            },
-            400: {"description": "Malformed request error"},
-        },
-    }
-)
 def get_associated_scaffolds_ordered():
-    """
-    Return associated scaffolds + info on each, list in order of input.
-    """
     smiles_list = process_list_input(request, "SMILES", 1000)
     max_rings = get_max_rings(request)
     database = get_database(request)
@@ -186,113 +93,8 @@ def get_associated_scaffolds_ordered():
     return jsonify(result)
 
 
-@compound_search.route("/get_high_scores", methods=["GET"])
-@swag_from(
-    {
-        "tags": TAGS,
-        "parameters": [
-            {
-                "name": "SMILES",
-                "in": "query",
-                "type": "string",
-                "required": True,
-                "description": "List of compound SMILES, comma-separated. Invalid SMILES are ignored.",
-            },
-            {
-                "name": "max_rings",
-                "in": "query",
-                "type": "integer",
-                "default": 10,
-                "required": False,
-                "description": "Ignore molecules with more than the specified number of ring systems to avoid extended processing times",
-                "minimum": MAX_RING_LOWER_BOUND,
-                "maximum": MAX_RING_UPPER_BOUND,
-            },
-            {
-                "name": "database",
-                "in": "query",
-                "type": "str",
-                "default": ALLOWED_DB_NAMES[0],
-                "required": False,
-                "description": f"Database to fetch information from",
-                "enum": ALLOWED_DB_NAMES,
-            },
-        ],
-        "responses": {
-            200: {
-                "description": "A json object with all compounds and their highest-scoring scaffold + its pscore. If the compound has no scaffolds in the DB a score of 'None' is given."
-            },
-            400: {"description": "Malformed request error"},
-        },
-    }
-)
-def get_high_scores():
-    """
-    Return highest-scoring scaffold for each molecule.
-    """
-    smiles_list = process_list_input(request, "SMILES", 1000)
-    max_rings = get_max_rings(request)
-    database = get_database(request)
-    associated_scaffolds = _get_associated_scaffolds_from_list(
-        smiles_list, max_rings, database
-    )
-    result = []
-    for smiles in associated_scaffolds.keys():
-        scaffolds = associated_scaffolds[smiles]
-        max_scaf_score = -1
-        max_scaf_info = {}
-        for scaf_info in scaffolds:
-            if scaf_info["in_db"]:
-                scaf_pscore = scaf_info["pscore"]
-                if scaf_pscore is not None and scaf_pscore > max_scaf_score:
-                    max_scaf_score = scaf_pscore
-                    max_scaf_info = scaf_info
-        if max_scaf_score == -1:
-            max_scaf_score = None
-        result.append(
-            {
-                "molecule_smiles": smiles,
-                "highest_scoring_scaf": max_scaf_info,
-            }
-        )
-
-    return jsonify(result)
-
-
 @compound_search.route("/get_associated_substance_ids", methods=["GET"])
-@swag_from(
-    {
-        "tags": TAGS,
-        "parameters": [
-            {
-                "name": "CIDs",
-                "in": "query",
-                "type": "string",
-                "required": True,
-                "description": "List of compound PubChem CIDs, comma-separated.",
-            },
-            {
-                "name": "database",
-                "in": "query",
-                "type": "str",
-                "default": ALLOWED_DB_NAMES[0],
-                "required": False,
-                "description": f"Database to fetch information from",
-                "enum": ALLOWED_DB_NAMES,
-            },
-        ],
-        "responses": {
-            200: {
-                "description": "A json object containing each CID mapped to 1 or more SIDs associated with it in the DB. CIDs not in the DB will have 0 associated SIDs."
-            },
-            400: {"description": "Malformed request error"},
-        },
-    }
-)
 def get_associated_substance_ids():
-    """
-    Get SubstanceIDs (SIDs) associated with the input CompoundIDs (CIDs) in the DB.
-    """
     cid_list = process_integer_list_input(request, "CIDs", 1000)
     database = get_database(request)
     result = badapple.get_associated_sids(cid_list, database)

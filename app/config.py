@@ -2,7 +2,6 @@
 from os import environ
 
 FLASK_ENV = environ.get("FLASK_ENV")
-VERSION = environ.get("VERSION")
 
 # App
 APP_NAME = environ.get("APP_NAME")
