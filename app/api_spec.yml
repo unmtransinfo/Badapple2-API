@@ -1,14 +1,17 @@
 info:
   title: API for Badapple databases
-  description: API which allows for programmatic access to badapple_classic and badapple2 DBs.
+  description: |
+    API which allows for programmatic access to badapple_classic and badapple2 databases.
+    
+    Please report any issues to https://github.com/unmtransinfo/Badapple2-API/issues
   version: 1
 paths:
   /compound_search/get_associated_scaffolds:
     get:
       tags:
         - Compound Search
-      summary: Get associated scaffolds + info on each, dictionary from input SMILES->scaffolds.
-      description: Returns a JSON object containing all given compounds (SMILES) and their associated scaffolds with Badapple scores and other information. The data will be returned as a dictionary mapping input SMILES to a list of associated scaffolds.
+      summary: Get associated scaffolds and info on each.
+      description: Returns a dictionary mapping all given compounds (SMILES) to their associated scaffolds with Badapple scores and other information.
       parameters:
         - name: SMILES
           in: query
@@ -16,14 +19,14 @@ paths:
           items:
             type: string
           required: true
-          description: List of compound SMILES, comma-separated.
+          description: List of compound SMILES
         - name: max_rings
           in: query
           type: integer
           required: false
           minimum: 1
           maximum: 10
-          description: Ignore compounds with more than the specified number of ring systems to avoid extended processing times (must be between 1 and 10).
+          description: Ignore compounds with more than the specified number of ring systems to avoid extended processing times (must be between 1 and 10)
           default: 10
         - name: database
           in: query
@@ -34,7 +37,7 @@ paths:
           default: badapple_classic
       responses:
         200:
-          description: A JSON object containing all compounds and their associated scaffolds with Badapple scores and other information. If a scaffold is not present in the database, it will have an empty list.
+          description: A JSON object containing all compounds and their associated scaffolds with Badapple scores and other information. If a scaffold is not present in the given database, it will have an empty list.
           schema:
             type: object
             additionalProperties:
@@ -42,24 +45,24 @@ paths:
               items:
                 type: object
                 properties:
-                  id: {type: integer}
-                  in_db: {type: boolean}
-                  in_drug: {type: boolean}
-                  kekule_scafsmi: {type: string}
-                  nass_active: {type: integer}
-                  nass_tested: {type: integer}
-                  ncpd_active: {type: integer}
-                  ncpd_tested: {type: integer}
-                  ncpd_total: {type: integer}
-                  nsam_active: {type: integer}
-                  nsam_tested: {type: integer}
-                  nsub_active: {type: integer}
-                  nsub_tested: {type: integer}
-                  nsub_total: {type: integer}
-                  prank: {type: integer}
-                  pscore: {type: integer}
-                  scafsmi: {type: string}
-                  scaftree: {type: string}
+                  id: {type: integer, description: scaffoldID}
+                  in_db: {type: boolean, description: If scaffold was found in database}
+                  in_drug: {type: boolean, description: If scaffold is present in any approved drugs}
+                  kekule_scafsmi: {type: string, description: Kekule SMILES for the scaffold}
+                  nass_active: {type: integer, description: Number of assays with active compounds containing scaffold}
+                  nass_tested: {type: integer, description: Number of assays with tested compounds containing scaffold}
+                  ncpd_active: {type: integer, description: Number of active compounds containing scaffold}
+                  ncpd_tested: {type: integer, description: Number of tested compounds containing scaffold}
+                  ncpd_total: {type: integer, description: Total number of compounds containing scaffold}
+                  nsam_active: {type: integer, description: Number of active samples containing scaffold}
+                  nsam_tested: {type: integer, description: Number of tested samples containing scaffold}
+                  nsub_active: {type: integer, description: Number of active substances containing scaffold}
+                  nsub_tested: {type: integer, description: Number of tested substances containing scaffold}
+                  nsub_total: {type: integer, description: Total number of substances containing scaffold}
+                  prank: {type: integer, description: Rank of pScore within database (ranks are ordered high->low)}
+                  pscore: {type: integer, description: Promiscuity Score (pScore)}
+                  scafsmi: {type: string, description: Canonical SMILES for scaffold}
+                  scaftree: {type: string, description: Tree with scaffoldID:(subScaffoldIDs)}
           examples:
             application/json:
               {
@@ -154,7 +157,7 @@ paths:
     get:
       tags:
         - Compound Search
-      summary: Get associated scaffolds in order of input
+      summary: Get associated scaffolds and info on each. Output is ordered to match input.
       description: Returns a JSON object containing all given compounds and their associated scaffolds with Badapple scores and other information, maintaining input order.
       parameters:
         - name: SMILES
@@ -163,19 +166,21 @@ paths:
           items:
             type: string
           required: true
-          description: List of compound SMILES, comma-separated.
+          description: List of compound SMILES
         - name: Names
           in: query
-          type: string
+          type: array
+          items:
+            type: string
           required: false
-          description: List of compound names, comma-separated.
+          description: List of compound names
         - name: max_rings
           in: query
           type: integer
           required: false
           minimum: 1
           maximum: 10
-          description: Ignore compounds with more than the specified number of ring systems to avoid extended processing times (must be between 1 and 10).
+          description: Ignore compounds with more than the specified number of ring systems to avoid extended processing times (must be between 1 and 10)
           default: 10
         - name: database
           in: query
@@ -187,6 +192,34 @@ paths:
       responses:
         200:
           description: A JSON object containing all given compounds and their associated scaffolds with Badapple scores and other information. The data will be in the same order as the given list of SMILES/Names.
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                molecule_smiles: {type: string, description: SMILES of input compound}
+                name: {type: string, description: Name of input compound}
+                scaffolds:
+                  type: object
+                  properties:
+                    id: {type: integer, description: scaffoldID}
+                    in_db: {type: boolean, description: If scaffold was found in database}
+                    in_drug: {type: boolean, description: If scaffold is present in any approved drugs}
+                    kekule_scafsmi: {type: string, description: Kekule SMILES for the scaffold}
+                    nass_active: {type: integer, description: Number of assays with active compounds containing scaffold}
+                    nass_tested: {type: integer, description: Number of assays with tested compounds containing scaffold}
+                    ncpd_active: {type: integer, description: Number of active compounds containing scaffold}
+                    ncpd_tested: {type: integer, description: Number of tested compounds containing scaffold}
+                    ncpd_total: {type: integer, description: Total number of compounds containing scaffold}
+                    nsam_active: {type: integer, description: Number of active samples containing scaffold}
+                    nsam_tested: {type: integer, description: Number of tested samples containing scaffold}
+                    nsub_active: {type: integer, description: Number of active substances containing scaffold}
+                    nsub_tested: {type: integer, description: Number of tested substances containing scaffold}
+                    nsub_total: {type: integer, description: Total number of substances containing scaffold}
+                    prank: {type: integer, description: Rank of pScore within database (ranks are ordered high->low)}
+                    pscore: {type: integer, description: Promiscuity Score (pScore)}
+                    scafsmi: {type: string, description: Canonical SMILES for scaffold}
+                    scaftree: {type: string, description: Tree with scaffoldID:(subScaffoldIDs)}
           examples:
             application/json:
               [
@@ -289,8 +322,8 @@ paths:
     get:
       tags:
         - Compound Search
-      summary: Get the PubChem SubstanceIDs (SIDs) associated with the PubChem CompoundIDs (CIDs) in the database
-      description: Returns a JSON object containing each CID mapped to one or more SIDs associated with it in the database.
+      summary: Get the PubChem SubstanceIDs (SIDs) associated with the PubChem CompoundIDs (CIDs) in the given database.
+      description: Returns a JSON object containing a list of dictionaries. Each dictionary contains a CID and its associated SIDs in the given database.
       parameters:
         - name: CIDs
           in: query
@@ -308,7 +341,7 @@ paths:
           default: badapple_classic
       responses:
         200:
-          description: A JSON object containing each CID mapped to 1 or more SIDs associated with it in the DB. CIDs not in the DB will have 0 associated SIDs.
+          description: A JSON object containing each CID mapped to its associated SIDs in the given database.
           schema:
             type: array
             items:
@@ -316,12 +349,12 @@ paths:
               properties:
                 CID:
                   type: integer
-                  example: 1234
+                  description: PubChem CompoundID
                 SIDs:
                   type: array
                   items:
                     type: integer
-                  example: [5678, 5679]
+                    description: PubChem SubstanceID
           examples:
             application/json:
               [
@@ -339,5 +372,319 @@ paths:
                   ]
                 }
             ]
+        400:
+          description: Malformed request error
+  /scaffold_search/get_scaffold_id:
+    get:
+      tags:
+        - Scaffold Search
+      summary: Get the scaffoldID corresponding to given SMILES.
+      description: Returns a JSON object containg the scaffoldID (scafid) of the given scaffold using structural search. Will be null if scaffold not found in database. Note that the scaffoldID for the same scaffold can differ between databases.
+      parameters:
+        - name: SMILES
+          in: query
+          type: string
+          required: true
+          description: SMILES string representing scaffold
+        - name: database
+          in: query
+          type: string
+          required: false
+          description: Database to fetch information from
+          enum: [badapple_classic, badapple2]
+          default: badapple_classic
+      responses:
+        200:
+          description: A JSON object containing either the scafid or null if structure was not found.
+          schema:
+            type: integer
+            description: scaffoldID
+          examples:
+            application/json:
+              46
+        400:
+          description: Malformed request error
+  /scaffold_search/get_associated_compounds:
+    get:
+      tags:
+        - Scaffold Search
+      summary: Get associated PubChem compounds.
+      description: Return all PubChem compounds in the given database known to be associated with the given scaffold, including statistics.
+      parameters:
+        - name: scafid
+          in: query
+          type: integer
+          required: true
+          description: ID of scaffold
+        - name: database
+          in: query
+          type: string
+          required: false
+          description: Database to fetch information from
+          enum: [badapple_classic, badapple2]
+          default: badapple_classic
+      responses:
+        200:
+          description: A JSON object containing the list of all PubChem compounds in the given database known to be associated with the given scaffold, including statistics.
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                cansmi: {type: string, description: Canonical SMILES for compound}
+                cid: {type: integer, description: PubChem CompoundID}
+                isosmi: {type: string, description: Isomeric SMILES for compound}
+                nass_active: {type: integer, description: Number of assays where compound active}
+                nass_tested: {type: integer, description: Number of assays where compound tested}
+                nsam_active: {type: integer, description: Number of samples where compound active}
+                nsam_tested: {type: integer, description: Number of samples where compound tested}
+                nsub_active: {type: integer, description: Number of associated active substances}
+                nsub_tested: {type: integer, description: Number of associated tested substances}
+                nsub_total: {type: integer, description: Total number of associated substances (in the given database)}         
+          examples:
+            application/json:
+              [
+                {
+                  "cansmi": "Cc1ccccc1N(C(=O)Cc1cccs1)C(C(=O)NCC1CCCO1)c1cccnc1",
+                  "cid": 3216680,
+                  "isosmi": "CC1=CC=CC=C1N(C(C2=CN=CC=C2)C(=O)NCC3CCCO3)C(=O)CC4=CC=CS4",
+                  "nass_active": 0,
+                  "nass_tested": 649,
+                  "nsam_active": 0,
+                  "nsam_tested": 651,
+                  "nsub_active": 0,
+                  "nsub_tested": 1,
+                  "nsub_total": 2
+                },
+                {
+                  "cansmi": "O=C(NCC1CCCO1)C(c1cccnc1)N(C(=O)Cc1cccs1)c1ccccc1",
+                  "cid": 3216679,
+                  "isosmi": "C1CC(OC1)CNC(=O)C(C2=CN=CC=C2)N(C3=CC=CC=C3)C(=O)CC4=CC=CS4",
+                  "nass_active": 7,
+                  "nass_tested": 654,
+                  "nsam_active": 7,
+                  "nsam_tested": 656,
+                  "nsub_active": 2,
+                  "nsub_tested": 2,
+                  "nsub_total": 2
+                }
+              ]
+        400:
+          description: Malformed request error
+  /scaffold_search/get_associated_assay_ids:
+    get:
+      tags:
+        - Scaffold Search
+      summary: Get associated PubChem AssayIDs.
+      description: Return all PubChem AssayIDs in the given database known to be associated with the given scaffoldID.
+      parameters:
+        - name: scafid
+          in: query
+          type: integer
+          required: true
+          description: ID of scaffold
+        - name: database
+          in: query
+          type: string
+          required: false
+          description: Database to fetch information from
+          enum: [badapple_classic, badapple2]
+          default: badapple_classic
+      responses:
+        200:
+          description: A JSON object containing the list of PubChem AssayIDs associated with the scaffold.
+          schema:
+            type: array
+            items:
+              type: integer
+          examples:
+            application/json:
+              [
+                1345082,
+                1345083,
+                1347165,
+                1347417,
+                1645851,
+                1671188,
+                1671190,
+                1671193,
+                1671194
+              ]
+        400:
+          description: Malformed request error
+  /scaffold_search/get_active_targets:
+    get:
+      tags:
+        - Scaffold Search
+      summary: Get PubChem AssayIDs where scaffold was in active substance(s) along with biological target information.
+      description: Return the PubChem AssayIDs and corresponding biological targets where the given scaffoldID was present in an 'active' substance. Note that not all PubChem assay records have explicit target information.
+      parameters:
+        - name: scafid
+          in: query
+          type: integer
+          required: true
+          description: ID of scaffold
+        - name: database
+          in: query
+          type: string
+          required: false
+          description: Database to fetch information from
+          enum: [badapple2]
+          default: badapple2
+      responses:
+        200:
+          description: A JSON object containing a list of dictionaries. Each dictionary contains the AssayID (aid) and target information (if available)
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                aid:
+                  type: integer
+                  description: PubChem AssayID
+                external_id:
+                  type: string
+                  description: External ID of target
+                external_id_type:
+                  type: string
+                  description: Resource linked to external_id (either "UniProt", "NCBI", or "Other")
+                name:
+                  type: integer
+                  description: Name of target
+                protein_family:
+                  type: string
+                  description: Protein family information from Pharos (https://pharos.nih.gov/), if available
+                target_id:
+                  type: integer
+                  description: Target ID (unique to Badapple database)
+                taxonomy:
+                  type: string
+                  description: Target taxon from the NCBI Taxonomy Database
+                taxonomy_id:
+                  type: integer
+                  description: Taxon ID from the NCBI Taxonomy Database
+                type:
+                  type: string
+                  description: Target type (most commonly "Protein", but can also include "Gene", "Nucleotide", and "Pathway")
+          examples:
+            application/json:
+              [
+                {
+                  "aid": 651658,
+                  "external_id": "Q9HCT0",
+                  "external_id_type": "UniProt",
+                  "name": "Fibroblast growth factor 22",
+                  "protein_family": null,
+                  "target_id": 482,
+                  "taxonomy": "Homo sapiens (human)",
+                  "taxonomy_id": 9606,
+                  "type": "Protein"
+                },
+                {
+                  "aid": 1053197,
+                  "external_id": "Q9HAT2",
+                  "external_id_type": "UniProt",
+                  "name": "Sialate O-acetylesterase",
+                  "protein_family": "Enzyme",
+                  "target_id": 543,
+                  "taxonomy": "Homo sapiens (human)",
+                  "taxonomy_id": 9606,
+                  "type": "Protein"
+                }
+              ]
+        400:
+          description: Malformed request error
+  /scaffold_search/get_associated_drugs:
+    get:
+      tags:
+        - Scaffold Search
+      summary: Get approved drugs associated with a given scaffold.
+      description: Return list of approved drugs (DrugCentral IDs, SMILES, and INN) the given scaffold is present in.
+      parameters:
+        - name: scafid
+          in: query
+          type: integer
+          required: true
+          description: ID of scaffold
+        - name: database
+          in: query
+          type: string
+          required: false
+          description: Database to fetch information from
+          enum: [badapple2]
+          default: badapple2
+      responses:
+        200:
+          description: A JSON object containing a list of dictionaries. Each dictionary contains the DrugCentralID (drug_id), SMILES, and INN.
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                cansmi:
+                  type: string
+                  description: Canonical SMILES of drug
+                drug_id:
+                  type: integer
+                  description: DrugCentral (https://drugcentral.org/) ID
+                inn:
+                  type: string
+                  description: International Nonproprietary Name
+          examples:
+            application/json:
+              [
+                {
+                  "cansmi": "c1ccc2[nH]c(-c3cscn3)nc2c1",
+                  "drug_id": 2621,
+                  "inn": "thiabendazole"
+                }
+              ]
+        400:
+          description: Malformed request error
+  /substance_search/get_assay_outcomes:
+    get:
+      tags:
+        - Substance Search
+      summary: Get PubChem AssayIDs and outcomes for a substance within the given database.
+      description: Return a list of all PubChem AssayIDs associated with the PubChem SubstanceID (SID) in the given database, with outcomes.
+      parameters:
+        - name: SID
+          in: query
+          type: integer
+          required: true
+          description: PubChem SubstanceID
+        - name: database
+          in: query
+          type: string
+          required: false
+          description: Database to fetch information from
+          enum: [badapple_classic, badapple2]
+          default: badapple_classic
+      responses:
+        200:
+          description: A JSON object containing a list of PubChem AssayIDs associated with the SID in the given database, with outcomes.
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                aid: {type: integer, description: PubChem AssayID}
+                outcome: {type: integer, description: Outcome code (1 = inactive | 2 = active | 3 = inconclusive | 4 = unspecified | 5 = probe)}
+          examples:
+            application/json:
+              [
+                {
+                  "aid": 1159524,
+                  "outcome": 1
+                },
+                {
+                  "aid": 1053197,
+                  "outcome": 1
+                },
+                {
+                  "aid": 743445,
+                  "outcome": 1
+                }
+              ]
         400:
           description: Malformed request error
