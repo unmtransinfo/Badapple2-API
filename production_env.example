@@ -1,5 +1,4 @@
 FLASK_ENV="production"
-VERSION="1"
 
 # specs for badapple_classic
 DB_NAME=badapple_classic
