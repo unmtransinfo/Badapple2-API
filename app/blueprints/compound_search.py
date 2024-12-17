@@ -38,7 +38,7 @@ def _get_associated_scaffolds_from_list(
         scaffolds = scaf_res["scaffolds"]
         scaffold_info_list = []
         for scafsmi in scaffolds:
-            scaf_info = badapple.search_scaffold(scafsmi, db_name)
+            scaf_info = badapple.search_scaffold_by_smiles(scafsmi, db_name)
             if len(scaf_info) < 1:
                 scaf_info = {
                     "scafsmi": scafsmi,
