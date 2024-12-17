@@ -13,11 +13,11 @@ def _load_api_spec() -> dict:
     return api_spec
 
 
-def _get_updated_paths(paths_dict: dict, version_url_prefix: str, in_production: bool):
+def _get_updated_paths(paths_dict: dict, path_prefix: str, in_production: bool):
     updated_paths = {}
     for path in paths_dict:
         if not (in_production) or path not in DEV_ONLY_PATHS:
-            new_path = version_url_prefix + path
+            new_path = path_prefix + path
             updated_paths[new_path] = paths_dict[path]
     return updated_paths
 
@@ -56,9 +56,12 @@ def create_app():
     }
 
     # update template to include URL prefixes
-    swagger_template.update({"swaggerUiPrefix": f"/{URL_PREFIX}" if IN_PROD else ""})
+    swagger_template["swaggerUiPrefix"] = f"/{URL_PREFIX}" if IN_PROD else ""
+    path_prefix = (
+        f"/{URL_PREFIX}{VERSION_URL_PREFIX}" if IN_PROD else VERSION_URL_PREFIX
+    )
     swagger_template["paths"] = _get_updated_paths(
-        swagger_template["paths"], VERSION_URL_PREFIX, IN_PROD
+        swagger_template["paths"], path_prefix, IN_PROD
     )
 
     # setup swagger and register routes
