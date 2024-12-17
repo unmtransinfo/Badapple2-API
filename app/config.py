@@ -45,3 +45,10 @@ for db in databases:
 # TODO: make this match api_spec.yml
 MAX_RING_LOWER_BOUND = 1
 MAX_RING_UPPER_BOUND = 10
+
+# these API calls are only available on localhost
+# (are computationally expensive and/or require activity table)
+DEV_ONLY_PATHS = [
+    "/scaffold_search/get_associated_assay_ids",
+    "/substance_search/get_assay_outcomes",
+]

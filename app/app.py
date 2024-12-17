@@ -1,5 +1,6 @@
 import yaml
 from blueprints.version import register_routes
+from config import DEV_ONLY_PATHS
 from dotenv import load_dotenv
 from flasgger import LazyJSONEncoder, Swagger
 from flask import Flask
@@ -12,11 +13,12 @@ def _load_api_spec() -> dict:
     return api_spec
 
 
-def _get_updated_paths(paths_dict: dict, version_url_prefix: str):
+def _get_updated_paths(paths_dict: dict, version_url_prefix: str, in_production: bool):
     updated_paths = {}
     for path in paths_dict:
-        new_path = version_url_prefix + path
-        updated_paths[new_path] = paths_dict[path]
+        if not (in_production) or path not in DEV_ONLY_PATHS:
+            new_path = version_url_prefix + path
+            updated_paths[new_path] = paths_dict[path]
     return updated_paths
 
 
@@ -56,7 +58,7 @@ def create_app():
     # update template to include URL prefixes
     swagger_template.update({"swaggerUiPrefix": f"/{URL_PREFIX}" if IN_PROD else ""})
     swagger_template["paths"] = _get_updated_paths(
-        swagger_template["paths"], VERSION_URL_PREFIX
+        swagger_template["paths"], VERSION_URL_PREFIX, IN_PROD
     )
 
     # setup swagger and register routes

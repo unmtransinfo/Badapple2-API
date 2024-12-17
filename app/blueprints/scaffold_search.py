@@ -27,6 +27,18 @@ def get_scaffold_id():
     return jsonify(result)
 
 
+@scaffold_search.route("/get_scaffold_info", methods=["GET"])
+def get_scaffold_info():
+    scafid = request.args.get("scafid", type=int)
+    database = get_database(request)
+    result = badapple.search_scaffold_by_id(scafid, database)
+    if result and len(result) > 0:
+        result = result[0]
+    else:
+        result = None
+    return jsonify(result)
+
+
 @scaffold_search.route("/get_associated_compounds", methods=["GET"])
 def get_associated_compounds():
     scafid = request.args.get("scafid", type=int)
@@ -35,13 +47,16 @@ def get_associated_compounds():
     return jsonify(result)
 
 
-@scaffold_search.route("/get_associated_assay_ids", methods=["GET"])
-def get_associated_assay_ids():
-    scafid = request.args.get("scafid", type=int)
-    database = get_database(request)
-    result = badapple.get_associated_assay_ids(scafid, database)
-    result = [d["aid"] for d in result]
-    return jsonify(result)
+# these routes are conditional on IN_PROD flag
+# (see version.py)
+def include_dev_only_routes():
+    @scaffold_search.route("/get_associated_assay_ids", methods=["GET"])
+    def get_associated_assay_ids():
+        scafid = request.args.get("scafid", type=int)
+        database = get_database(request)
+        result = badapple.get_associated_assay_ids(scafid, database)
+        result = [d["aid"] for d in result]
+        return jsonify(result)
 
 
 # badapple2+ only
