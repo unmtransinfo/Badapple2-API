@@ -2,12 +2,12 @@
 from os import environ
 
 FLASK_ENV = environ.get("FLASK_ENV")
-VERSION = environ.get("VERSION")
 
 # App
 APP_NAME = environ.get("APP_NAME")
 APP_PORT = environ.get("APP_PORT")
 APP_URL = environ.get("APP_URL") or "localhost"
+URL_PREFIX = environ.get("URL_PREFIX") or ""
 
 # Database
 databases = [
@@ -42,5 +42,13 @@ for db in databases:
 
 # API limits
 # limits on max rings
+# TODO: make this match api_spec.yml
 MAX_RING_LOWER_BOUND = 1
 MAX_RING_UPPER_BOUND = 10
+
+# these API calls are only available on localhost
+# (are computationally expensive and/or require activity table)
+DEV_ONLY_PATHS = [
+    "/scaffold_search/get_associated_assay_ids",
+    "/substance_search/get_assay_outcomes",
+]

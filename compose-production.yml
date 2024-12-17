@@ -90,13 +90,15 @@ services:
         condition: service_healthy
       badapple2_db:
         condition: service_healthy
+    volumes:
+      - static_files_flasgger:/app/flasgger_static/
     networks:
       - badapple_backend
       - badapple_frontend
 
   badapple_ui:
     build:
-      context: https://github.com/unmtransinfo/Badapple2-UI.git#main
+      context: https://github.com/unmtransinfo/Badapple2-UI.git#context_dec_11
     environment:
       - NODE_OPTIONS=--openssl-legacy-provider
     env_file:
@@ -112,6 +114,7 @@ services:
     image: nginx:1
     volumes:
       - static_files_badapple:/usr/share/nginx/html/static_files_badapple:ro
+      - static_files_flasgger:/usr/share/nginx/html/static_files_flasgger:ro
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - nginx:/etc/nginx
     ports:
@@ -129,6 +132,7 @@ volumes:
   badapple_classic_data:
   badapple2_data:
   static_files_badapple:
+  static_files_flasgger:
   nginx:
 
 networks:

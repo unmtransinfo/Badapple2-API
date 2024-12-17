@@ -1,5 +1,4 @@
 FLASK_ENV="production"
-VERSION="1"
 
 # specs for badapple_classic
 DB_NAME=badapple_classic
@@ -26,7 +25,8 @@ APP_NAME=Badapple2-API
 # make sure nginx.conf uses this APP_PORT
 # (line: proxy_pass http://badapple_api:8001/)
 APP_PORT=8001
-APP_URL=chiltepin.health.unm.edu/badapple2
+URL_PREFIX=badapple2
+APP_URL=chiltepin.health.unm.edu/${URL_PREFIX}
 VITE_API_FETCH_SCAFFOLDS_URL=https://${APP_URL}/api/v1/compound_search/get_associated_scaffolds_ordered
 VITE_API_FETCH_DRUGS_URL=https://${APP_URL}/api/v1/scaffold_search/get_associated_drugs
 VITE_API_FETCH_TARGETS_URL=https://${APP_URL}/api/v1/scaffold_search/get_active_targets
