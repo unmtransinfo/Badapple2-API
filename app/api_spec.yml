@@ -2,8 +2,11 @@ info:
   title: API for Badapple databases
   description: |
     API which allows for programmatic access to badapple_classic and badapple2 databases.
-    
+
     Please report any issues to https://github.com/unmtransinfo/Badapple2-API/issues
+
+    Note: This API is intended for moderate use cases and does not include all the functions available on the locally hosted version (e.g., searching for specific assay outcomes). 
+    One can setup the API locally by following the instructions here: https://github.com/unmtransinfo/Badapple2-API/blob/main/README.md#setup-development
   version: 1
 paths:
   /compound_search/get_associated_scaffolds:
@@ -11,7 +14,7 @@ paths:
       tags:
         - Compound Search
       summary: Get associated scaffolds and info on each.
-      description: Returns a dictionary mapping all given compounds (SMILES) to their associated scaffolds with Badapple scores and other information.
+      description: Returns a dictionary mapping all given compounds (SMILES) to their associated scaffolds with pScores and other information.
       parameters:
         - name: SMILES
           in: query
@@ -37,7 +40,7 @@ paths:
           default: badapple_classic
       responses:
         200:
-          description: A JSON object containing all compounds and their associated scaffolds with Badapple scores and other information. If a scaffold is not present in the given database, it will have an empty list.
+          description: A JSON object containing all compounds and their associated scaffolds with pScores and other information. If a scaffold is not present in the given database, it will have an empty list.
           schema:
             type: object
             additionalProperties:
@@ -61,7 +64,7 @@ paths:
                   nsub_total: {type: integer, description: Total number of substances containing scaffold}
                   prank: {type: integer, description: Rank of pScore within database (ranks are ordered high->low)}
                   pscore: {type: integer, description: Promiscuity Score (pScore)}
-                  scafsmi: {type: string, description: Canonical SMILES for scaffold}
+                  scafsmi: {type: string, description: Canonical SMILES (from RDKit) for scaffold}
                   scaftree: {type: string, description: Tree with scaffoldID:(subScaffoldIDs)}
           examples:
             application/json:
@@ -158,7 +161,7 @@ paths:
       tags:
         - Compound Search
       summary: Get associated scaffolds and info on each. Output is ordered to match input.
-      description: Returns a JSON object containing all given compounds and their associated scaffolds with Badapple scores and other information, maintaining input order.
+      description: Returns a JSON object containing all given compounds and their associated scaffolds with pScores and other information, maintaining input order.
       parameters:
         - name: SMILES
           in: query
@@ -191,7 +194,7 @@ paths:
           default: badapple_classic
       responses:
         200:
-          description: A JSON object containing all given compounds and their associated scaffolds with Badapple scores and other information. The data will be in the same order as the given list of SMILES/Names.
+          description: A JSON object containing all given compounds and their associated scaffolds with pScores and other information. The data will be in the same order as the given list of SMILES/Names.
           schema:
             type: array
             items:
@@ -218,7 +221,7 @@ paths:
                     nsub_total: {type: integer, description: Total number of substances containing scaffold}
                     prank: {type: integer, description: Rank of pScore within database (ranks are ordered high->low)}
                     pscore: {type: integer, description: Promiscuity Score (pScore)}
-                    scafsmi: {type: string, description: Canonical SMILES for scaffold}
+                    scafsmi: {type: string, description: Canonical SMILES (from RDKit) for scaffold}
                     scaftree: {type: string, description: Tree with scaffoldID:(subScaffoldIDs)}
           examples:
             application/json:
@@ -404,6 +407,71 @@ paths:
               46
         400:
           description: Malformed request error
+  /scaffold_search/get_scaffold_info:
+    get:
+      tags:
+        - Scaffold Search
+      summary: Get the pScore, inDrug, and other information for a given scaffold.
+      description: Returns a JSON object containing the pScore, inDrug, and other information for the given scaffoldID. Will be null if the ID is not in the database.
+      parameters:
+        - name: scafid
+          in: query
+          type: integer
+          required: true
+          description: ID of scaffold
+        - name: database
+          in: query
+          type: string
+          required: false
+          description: Database to fetch information from
+          enum: [badapple_classic, badapple2]
+          default: badapple_classic
+      responses:
+        200:
+          description: A JSON object containing either the scafid or null if structure was not found.
+          schema:
+            type: object
+            properties:
+              id: {type: integer, description: scaffoldID}
+              in_drug: {type: boolean, description: If scaffold is present in any approved drugs}
+              kekule_scafsmi: {type: string, description: Kekule SMILES for the scaffold}
+              nass_active: {type: integer, description: Number of assays with active compounds containing scaffold}
+              nass_tested: {type: integer, description: Number of assays with tested compounds containing scaffold}
+              ncpd_active: {type: integer, description: Number of active compounds containing scaffold}
+              ncpd_tested: {type: integer, description: Number of tested compounds containing scaffold}
+              ncpd_total: {type: integer, description: Total number of compounds containing scaffold}
+              nsam_active: {type: integer, description: Number of active samples containing scaffold}
+              nsam_tested: {type: integer, description: Number of tested samples containing scaffold}
+              nsub_active: {type: integer, description: Number of active substances containing scaffold}
+              nsub_tested: {type: integer, description: Number of tested substances containing scaffold}
+              nsub_total: {type: integer, description: Total number of substances containing scaffold}
+              prank: {type: integer, description: Rank of pScore within database (ranks are ordered high->low)}
+              pscore: {type: integer, description: Promiscuity Score (pScore)}
+              scafsmi: {type: string, description: Canonical SMILES (from RDKit) for scaffold}
+              scaftree: {type: string, description: Tree with scaffoldID:(subScaffoldIDs)}
+          examples:
+            application/json:
+              {
+                "id": 46,
+                "in_drug": true,
+                "kekule_scafsmi": "O=C1NC(=O)C2=C(N=CN2)N1",
+                "nass_active": 583,
+                "nass_tested": 819,
+                "ncpd_active": 1750,
+                "ncpd_tested": 2205,
+                "ncpd_total": 2238,
+                "nsam_active": 6717,
+                "nsam_tested": 1350455,
+                "nsub_active": 1876,
+                "nsub_tested": 2697,
+                "nsub_total": 3129,
+                "prank": 1737,
+                "pscore": 139,
+                "scafsmi": "O=c1[nH]c(=O)c2[nH]cnc2[nH]1",
+                "scaftree": "46"
+              }
+        400:
+          description: Malformed request error
   /scaffold_search/get_associated_compounds:
     get:
       tags:
@@ -431,7 +499,7 @@ paths:
             items:
               type: object
               properties:
-                cansmi: {type: string, description: Canonical SMILES for compound}
+                cansmi: {type: string, description: Canonical SMILES (from RDKit) for compound}
                 cid: {type: integer, description: PubChem CompoundID}
                 isosmi: {type: string, description: Isomeric SMILES for compound}
                 nass_active: {type: integer, description: Number of assays where compound active}
@@ -623,7 +691,7 @@ paths:
               properties:
                 cansmi:
                   type: string
-                  description: Canonical SMILES of drug
+                  description: Canonical SMILES (from RDKit) of drug
                 drug_id:
                   type: integer
                   description: DrugCentral (https://drugcentral.org/) ID
