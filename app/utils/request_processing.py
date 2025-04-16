@@ -12,11 +12,13 @@ from flask import abort
 
 
 def int_check(
-    n,
+    request,
     var_name: str,
     lower_limit: Union[None, int] = None,
     upper_limit: Union[None, int] = None,
+    default_val: Union[None, int] = None,
 ):
+    n = request.args.get(var_name, type=int) or default_val
     try:
         n = int(n)
     except:
@@ -29,12 +31,8 @@ def int_check(
 
 
 def get_max_rings(request, default_val: int = 10):
-    max_rings = request.args.get("max_rings", type=int) or default_val
     max_rings = int_check(
-        max_rings,
-        "max_rings",
-        MAX_RING_LOWER_BOUND,
-        MAX_RING_UPPER_BOUND,
+        request, "max_rings", MAX_RING_LOWER_BOUND, MAX_RING_UPPER_BOUND, default_val
     )
     return max_rings
 

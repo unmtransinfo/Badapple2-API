@@ -42,14 +42,6 @@ def execute_query(query: sql.SQL, connection):
     return result
 
 
-def index_compound(cid: int, db_name: str):
-    cid = int_check(cid, "CID")
-    query = sql.SQL("SELECT isosmi from compound where cid={cid} LIMIT 1").format(
-        cid=sql.Literal(cid)
-    )
-    return select(query, db_name)
-
-
 def search_scaffold_by_smiles(scafsmi: str, db_name: str):
     # here we assume the given scafsmi is None if it was not a valid SMILES
     # and that the scafsmi was canonicalized (much faster to search scafsmi than use structural search!)
@@ -62,7 +54,6 @@ def search_scaffold_by_smiles(scafsmi: str, db_name: str):
 
 
 def search_scaffold_by_id(scafid: str, db_name: str):
-    scafid = int_check(scafid, "scafid")
     query = sql.SQL("SELECT * from scaffold where id={scafid} LIMIT 1").format(
         scafid=sql.Literal(scafid)
     )
@@ -82,7 +73,6 @@ def get_scaffold_id(scafsmi: str, db_name: str):
 
 
 def get_associated_compounds(scafid: int, db_name: str):
-    scafid = int_check(scafid, "scafid")
     query = sql.SQL(
         "select * from compound where cid IN (select cid from scaf2cpd where scafid={scafid})"
     ).format(scafid=sql.Literal(scafid))
@@ -98,7 +88,6 @@ def get_associated_sids(cid_list: list[int], db_name: str):
 
 
 def get_associated_assay_ids(scafid: int, db_name: str):
-    scafid = int_check(scafid, "scafid")
     query = sql.SQL(
         """SELECT DISTINCT aid 
 FROM activity 
@@ -116,7 +105,6 @@ WHERE cid IN (
 
 
 def get_assay_outcomes(sid: int, db_name: str):
-    sid = int_check(sid, "SID")
     query = sql.SQL("SELECT aid,outcome FROM activity WHERE sid={sid}").format(
         sid=sql.Literal(sid)
     )
@@ -125,9 +113,6 @@ def get_assay_outcomes(sid: int, db_name: str):
 
 # badapple2+ only
 def get_active_targets(scafid: int, db_name: str = "badapple2"):
-    # TODO: move this int_check code into request_processing.py for all functions
-    # TODO: format SQL statements
-    scafid = int_check(scafid, "scafid")
     query = sql.SQL(
         """
 SELECT 
@@ -150,7 +135,6 @@ ORDER BY aid;
 
 
 def get_associated_drugs(scafid: int, db_name: str = "badapple2"):
-    scafid = int_check(scafid, "scafid")
     query = sql.SQL(
         "SELECT * FROM drug WHERE drug_id IN (SELECT drug_id FROM scaf2drug WHERE scafid={scafid});"
     ).format(scafid=sql.Literal(scafid))
