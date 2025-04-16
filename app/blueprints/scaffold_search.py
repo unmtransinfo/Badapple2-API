@@ -9,7 +9,7 @@ For information on what each of the API calls do see api_spec.yml.
 from config import ALLOWED_DB_NAMES
 from database import badapple
 from flask import Blueprint, jsonify, request
-from utils.request_processing import get_database
+from utils.request_processing import get_database, int_check
 
 scaffold_search = Blueprint("scaffold_search", __name__, url_prefix="/scaffold_search")
 TAGS = ["Scaffold Search"]
@@ -29,7 +29,7 @@ def get_scaffold_id():
 
 @scaffold_search.route("/get_scaffold_info", methods=["GET"])
 def get_scaffold_info():
-    scafid = request.args.get("scafid", type=int)
+    scafid = int_check(request, "scafid")
     database = get_database(request)
     result = badapple.search_scaffold_by_id(scafid, database)
     if result and len(result) > 0:
@@ -41,7 +41,7 @@ def get_scaffold_info():
 
 @scaffold_search.route("/get_associated_compounds", methods=["GET"])
 def get_associated_compounds():
-    scafid = request.args.get("scafid", type=int)
+    scafid = int_check(request, "scafid")
     database = get_database(request)
     result = badapple.get_associated_compounds(scafid, database)
     return jsonify(result)
@@ -52,7 +52,7 @@ def get_associated_compounds():
 def include_dev_only_routes():
     @scaffold_search.route("/get_associated_assay_ids", methods=["GET"])
     def get_associated_assay_ids():
-        scafid = request.args.get("scafid", type=int)
+        scafid = int_check(request, "scafid")
         database = get_database(request)
         result = badapple.get_associated_assay_ids(scafid, database)
         result = [d["aid"] for d in result]
@@ -62,7 +62,7 @@ def include_dev_only_routes():
 # badapple2+ only
 @scaffold_search.route("/get_active_targets", methods=["GET"])
 def get_active_targets():
-    scafid = request.args.get("scafid", type=int)
+    scafid = int_check(request, "scafid")
     database = get_database(
         request, default_val=ALLOWED_DB_NAMES[1], allowed_db_names=[ALLOWED_DB_NAMES[1]]
     )
@@ -79,7 +79,7 @@ def get_active_targets():
 
 @scaffold_search.route("/get_associated_drugs", methods=["GET"])
 def get_associated_drugs():
-    scafid = request.args.get("scafid", type=int)
+    scafid = int_check(request, "scafid")
     database = get_database(
         request, default_val=ALLOWED_DB_NAMES[1], allowed_db_names=[ALLOWED_DB_NAMES[1]]
     )

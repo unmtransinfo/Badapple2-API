@@ -1,6 +1,6 @@
 import yaml
 from blueprints.version import register_routes
-from config import DEV_ONLY_PATHS
+from config import DEV_ONLY_PATHS, PROD_ONLY_ADDL_DESCRIPTION
 from dotenv import load_dotenv
 from flasgger import LazyJSONEncoder, Swagger
 from flask import Flask
@@ -54,6 +54,12 @@ def create_app():
             "url_prefix": (f"/{URL_PREFIX}") if IN_PROD else "",
         },
     }
+
+    # update description if in production
+    if IN_PROD:
+        swagger_template["info"]["description"] = (
+            swagger_template["info"]["description"] + PROD_ONLY_ADDL_DESCRIPTION
+        )
 
     # update template to include URL prefixes
     swagger_template["swaggerUiPrefix"] = f"/{URL_PREFIX}" if IN_PROD else ""
