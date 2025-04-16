@@ -1,13 +1,9 @@
-# TODO: add schemas for other reused objects, fix note below if using local version
 info:
   title: API for Badapple databases
   description: |
     API which allows for programmatic access to badapple_classic and badapple2 databases.
 
     Please report any issues to https://github.com/unmtransinfo/Badapple2-API/issues
-
-    Note: This API is intended for moderate use cases and does not include all the functions available on the locally hosted version (e.g., searching for specific assay outcomes). 
-    One can setup the API locally by following the instructions here: https://github.com/unmtransinfo/Badapple2-API/blob/main/README.md#setup-development
   version: 1
 components:
   schemas:

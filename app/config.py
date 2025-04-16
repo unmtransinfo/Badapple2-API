@@ -46,6 +46,13 @@ for db in databases:
 MAX_RING_LOWER_BOUND = 1
 MAX_RING_UPPER_BOUND = 10
 
+# Only include this page description if in prod
+PROD_ONLY_ADDL_DESCRIPTION = """
+\n\n
+Note: This API is intended for moderate use cases and does not include all the functions available on the locally hosted version (e.g., searching for specific assay outcomes). 
+    One can setup the API locally by following the instructions here: https://github.com/unmtransinfo/Badapple2-API/blob/main/README.md#setup-development
+"""
+
 # these API calls are only available on localhost
 # (are computationally expensive and/or require activity table)
 DEV_ONLY_PATHS = [
