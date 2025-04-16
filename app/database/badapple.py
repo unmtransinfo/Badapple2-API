@@ -10,7 +10,6 @@ import psycopg2.extras
 from config import DB_NAME2HOST, DB_NAME2PASSWORD, DB_NAME2PORT, DB_NAME2USER
 from flask import abort
 from psycopg2 import sql
-from utils.request_processing import int_check
 
 
 def connect(db_name: str):
