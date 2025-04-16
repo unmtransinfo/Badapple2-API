@@ -42,7 +42,7 @@ for db in databases:
 
 # API limits
 # limits on max rings
-# TODO: make this match api_spec.yml
+# these should match api_spec.yml
 MAX_RING_LOWER_BOUND = 1
 MAX_RING_UPPER_BOUND = 10
 
