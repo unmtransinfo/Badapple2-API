@@ -11,10 +11,17 @@ info:
   version: 1
 components:
   schemas:
+    AssayID:
+      type: integer
+      description: PubChem AssayID
+    ScaffoldID:
+      type: integer
+      description: ID of scaffold 
     ScaffoldEntry:
       type: object
       properties:
-        id: {type: integer, description: scaffoldID}
+        id: 
+          $ref: '#/components/schemas/ScaffoldID'
         in_db: {type: boolean, description: If scaffold was found in database}
         in_drug: {type: boolean, description: If scaffold is present in any approved drugs}
         kekule_scafsmi: {type: string, description: Kekule SMILES for the scaffold}
@@ -32,10 +39,26 @@ components:
         pscore: {type: integer, description: Promiscuity Score (pScore)}
         scafsmi: {type: string, description: Canonical SMILES (from RDKit) for scaffold}
         scaftree: {type: string, description: Tree with scaffoldID:(subScaffoldIDs)}
-    ScaffoldEntryList:
-      type: array
-      items:
-        $ref: '#/components/schemas/ScaffoldEntry'
+    CompoundID:
+      type: integer
+      description: PubChem CompoundID
+    CompoundEntry:
+      type: object
+      properties:
+        cansmi: {type: string, description: Canonical SMILES (from RDKit) for compound}
+        cid:
+          $ref: '#/components/schemas/CompoundID'
+        isosmi: {type: string, description: Isomeric SMILES for compound}
+        nass_active: {type: integer, description: Number of assays where compound active}
+        nass_tested: {type: integer, description: Number of assays where compound tested}
+        nsam_active: {type: integer, description: Number of samples where compound active}
+        nsam_tested: {type: integer, description: Number of samples where compound tested}
+        nsub_active: {type: integer, description: Number of associated active substances}
+        nsub_tested: {type: integer, description: Number of associated tested substances}
+        nsub_total: {type: integer, description: Total number of associated substances (in the given database)}
+    SubstanceID:
+      type: integer
+      description: PubChem SubstanceID
     DrugEntry:
       type: object
       properties:
@@ -44,7 +67,7 @@ components:
           description: Canonical SMILES (from RDKit) of drug
         drug_id:
           type: integer
-          description: DrugCentral (https://drugcentral.org/) ID
+          description: DrugCentralID (https://drugcentral.org/)
         inn:
           type: string
           description: International Nonproprietary Name
@@ -90,18 +113,31 @@ components:
       description: Database to fetch information from
       enum: [badapple2]
       default: badapple2
-    ScaffoldID:
+    ScaffoldIDParam:
       name: scafid
       in: query
-      type: integer
       required: true
-      description: ID of scaffold   
+      schema:
+        $ref: '#/components/schemas/ScaffoldID'
     ScaffoldSMILES: 
       name: SMILES
       in: query
       type: string
       required: true
       description: SMILES string representing scaffold
+    CompoundIDs:
+      name: CIDs
+      in: query
+      required: true
+      type: array
+      items:
+        $ref: '#/components/schemas/CompoundID'
+    SubstanceIDParam:
+      name: SID
+      in: query
+      required: true
+      schema:
+        $ref: '#/components/schemas/SubstanceID'
   responses:
     ResponseCode400:
       description: Malformed request error
@@ -118,9 +154,13 @@ paths:
         - $ref: '#/components/parameters/Database'
       responses:
         200:
-          description: A JSON object containing all compounds and their associated scaffolds with pScores and other information. If a scaffold is not present in the given database, it will have an empty list.
+          description: A JSON object containing all compounds and their associated scaffolds with pScores and other information. If a scaffold is not present in the given database, then it will only contain the scafsmi and in_db=False.
           schema:
-            $ref: '#/components/schemas/ScaffoldEntry' # TODO: need to fix this schema
+            type: object
+            additionalProperties:
+              type: array
+              items:
+                $ref: '#/components/schemas/ScaffoldEntry'
           examples:
             application/json:
               {
@@ -235,7 +275,7 @@ paths:
                 scaffolds:
                   type: array
                   items:
-                    $ref: '#/components/schemas/ScaffoldEntryList'
+                    $ref: '#/components/schemas/ScaffoldEntry'
           examples:
             application/json:
               [
@@ -341,13 +381,7 @@ paths:
       summary: Get the PubChem SubstanceIDs (SIDs) associated with the PubChem CompoundIDs (CIDs) in the given database.
       description: Returns a JSON object containing a list of dictionaries. Each dictionary contains a CID and its associated SIDs in the given database.
       parameters:
-        - name: CIDs
-          in: query
-          type: array
-          items:
-            type: integer
-          required: true
-          description: List of CompoundIDs (CIDs) to look up (maximum 1000)
+        - $ref: '#/components/parameters/CompoundIDs'
         - $ref: '#/components/parameters/Database'
       responses:
         200:
@@ -358,13 +392,11 @@ paths:
               type: object
               properties:
                 CID:
-                  type: integer
-                  description: PubChem CompoundID
+                  $ref: '#/components/schemas/CompoundID'
                 SIDs:
                   type: array
                   items:
-                    type: integer
-                    description: PubChem SubstanceID
+                    $ref: '#components/schemas/SubstanceID'
           examples:
             application/json:
               [
@@ -397,8 +429,7 @@ paths:
         200:
           description: A JSON object containing either the scafid or null if structure was not found.
           schema:
-            type: integer
-            description: scaffoldID
+            $ref: '#/components/schemas/ScaffoldID'
           examples:
             application/json:
               46
@@ -411,7 +442,7 @@ paths:
       summary: Get the pScore, inDrug, and other information for a given scaffold.
       description: Returns a JSON object containing the pScore, inDrug, and other information for the given scaffoldID. Will be null if the ID is not in the database.
       parameters:
-        - $ref: '#/components/parameters/ScaffoldID'
+        - $ref: '#/components/parameters/ScaffoldIDParam'
         - $ref: '#/components/parameters/Database'
       responses:
         200:
@@ -448,7 +479,7 @@ paths:
       summary: Get associated PubChem compounds.
       description: Return all PubChem compounds in the given database known to be associated with the given scaffold, including statistics.
       parameters:
-        - $ref: '#/components/parameters/ScaffoldID'
+        - $ref: '#/components/parameters/ScaffoldIDParam'
         - $ref: '#/components/parameters/Database'
       responses:
         200:
@@ -456,18 +487,7 @@ paths:
           schema:
             type: array
             items:
-              type: object
-              properties:
-                cansmi: {type: string, description: Canonical SMILES (from RDKit) for compound}
-                cid: {type: integer, description: PubChem CompoundID}
-                isosmi: {type: string, description: Isomeric SMILES for compound}
-                nass_active: {type: integer, description: Number of assays where compound active}
-                nass_tested: {type: integer, description: Number of assays where compound tested}
-                nsam_active: {type: integer, description: Number of samples where compound active}
-                nsam_tested: {type: integer, description: Number of samples where compound tested}
-                nsub_active: {type: integer, description: Number of associated active substances}
-                nsub_tested: {type: integer, description: Number of associated tested substances}
-                nsub_total: {type: integer, description: Total number of associated substances (in the given database)}         
+              $ref: '#/components/schemas/CompoundEntry'        
           examples:
             application/json:
               [
@@ -505,7 +525,7 @@ paths:
       summary: Get associated PubChem AssayIDs.
       description: Return all PubChem AssayIDs in the given database known to be associated with the given scaffoldID.
       parameters:
-        - $ref: '#/components/parameters/ScaffoldID'
+        - $ref: '#/components/parameters/ScaffoldIDParam'
         - $ref: '#/components/parameters/Database'
       responses:
         200:
@@ -513,7 +533,7 @@ paths:
           schema:
             type: array
             items:
-              type: integer
+              $ref: '#/components/schemas/AssayID'
           examples:
             application/json:
               [
@@ -536,7 +556,7 @@ paths:
       summary: Get PubChem AssayIDs where scaffold was in active substance(s) along with biological target information.
       description: Return the PubChem AssayIDs and corresponding biological targets where the given scaffoldID was present in an 'active' substance. Note that not all PubChem assay records have explicit target information.
       parameters:
-        - $ref: '#/components/parameters/ScaffoldID'
+        - $ref: '#/components/parameters/ScaffoldIDParam'
         - $ref: '#/components/parameters/Database2'
       responses:
         200:
@@ -547,8 +567,7 @@ paths:
               type: object
               properties:
                 aid:
-                  type: integer
-                  description: PubChem AssayID
+                  $ref: '#/components/schemas/AssayID'
                 external_id:
                   type: string
                   description: External ID of target
@@ -608,7 +627,7 @@ paths:
       summary: Get approved drugs associated with a given scaffold.
       description: Return list of approved drugs (DrugCentral IDs, SMILES, and INN) the given scaffold is present in.
       parameters:
-        - $ref: '#/components/parameters/ScaffoldID'
+        - $ref: '#/components/parameters/ScaffoldIDParam'
         - $ref: '#/components/parameters/Database2'
       responses:
         200:
@@ -635,11 +654,7 @@ paths:
       summary: Get PubChem AssayIDs and outcomes for a substance within the given database.
       description: Return a list of all PubChem AssayIDs associated with the PubChem SubstanceID (SID) in the given database, with outcomes.
       parameters:
-        - name: SID
-          in: query
-          type: integer
-          required: true
-          description: PubChem SubstanceID
+        - $ref: '#/components/parameters/SubstanceIDParam'
         - $ref: '#/components/parameters/Database'
       responses:
         200:
@@ -649,7 +664,8 @@ paths:
             items:
               type: object
               properties:
-                aid: {type: integer, description: PubChem AssayID}
+                aid:
+                  $ref: '#/components/schemas/AssayID'
                 outcome: {type: integer, description: Outcome code (1 = inactive | 2 = active | 3 = inconclusive | 4 = unspecified | 5 = probe)}
           examples:
             application/json:
