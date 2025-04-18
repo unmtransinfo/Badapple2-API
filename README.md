@@ -17,6 +17,21 @@ The `compose-production.yml` file will spin up the Badapple2 website (DB, API, a
 5. The API should now be accessible from `localhost:8000`
    * A full set of Swagger documentation can be found at http://localhost:8000/apidocs
 
+## Development Notes
+### Upgrading Dependencies
+If one finds they need to update dependencies (`requirements.txt`), the following steps can be followed:
+1. If a new package is required, add it to `requirements.in`
+2. Setup and activate a Python (v3.12) virtual environment. For example, with conda use:
+    ```
+    conda create -n badapple2-api python=3.12 && conda activate badapple2-api
+    ```
+3. Install pip-tools: `pip install pip-tools`
+4. Compile new requirements: `pip-compile --upgrade`
+    * Make sure you are in the `app/` directory: `cd app/`
+5. (Optional) Test the update locally in your environment: `pip-sync`
+
+*Note*: If you need to update the Python version, make sure to adjust the steps above accordingly and to update the Python image in `Dockerfile`.
+
 ## Setup (Production on Chiltepin)
 1. Copy `production_env.example` to `.env`
 2. Fill in/edit the `.env` credentials as needed
