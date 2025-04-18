@@ -1,0 +1,11 @@
+setuptools
+flask
+flask-cors
+python-dotenv
+flasgger
+rdkit
+scaffoldgraph[rdkit]
+useful_rdkit_utils
+pandas
+psycopg2
+gunicorn
