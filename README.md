@@ -1,7 +1,7 @@
 # Badapple2-API
 API code for Badapple2. The repo also containers docker compose files which can be used to setup the entire project (including DBs, API, and UI).
 
-For moderate use cases one can use the public API:
+For moderate use cases (<1,000 compounds / day) one can use the public API:
 https://chiltepin.health.unm.edu/badapple2/apidocs/
 
 For large input files, local installation is recommended. See [Setup (Local Installation)](#setup-local-installation) below.
@@ -10,7 +10,7 @@ For large input files, local installation is recommended. See [Setup (Local Inst
 * Docker Compose
 
 ## Setup (Local Installation)
-The steps below will allow one setup the databases (badapple_classic + badapple2), API, UI on your own system.
+The steps below will install the databases (badapple_classic + badapple2), API, and UI on your system.
 1. Install docker engine: https://docs.docker.com/engine/install/
 2. (Optional) modify `local.env`
     * If you want to include activity outcomes ("activity" table), you will need to change `DB_PGDUMP_URL` to "https://unmtid-dbs.net/download/Badapple2/badapple_classic_full.pgdump" and `DB2_PGDUMP_URL` to "https://unmtid-dbs.net/download/Badapple2/badapple2_full.pgdump"
@@ -21,6 +21,13 @@ The steps below will allow one setup the databases (badapple_classic + badapple2
     * API: http://localhost:8000/apidocs/
     * badapple_classic: `psql -d badapple_classic -p 5432 -U toad -h localhost` (password: "road")
     * badapple2: `psql -d badapple2 -p 5433 -U frog -h localhost` (password: "lilyPad")
+
+## Documentation
+The `/apidocs/` page will provide you with detailed information on every API call available. Note that the local version includes some functions not available on the production server.
+
+See links below for documentation on the production and local version of the API:
+* Production: https://chiltepin.health.unm.edu/badapple2/apidocs/
+* Local: http://localhost:8000/apidocs/
 
 ## Usage
 One can use the API to access Badapple programmatically. For example, using the `requests` Python package one can fetch the scaffolds associated with some given compounds (SMILES):
@@ -44,7 +51,7 @@ data = json.loads(response.text)
 print(data)
 # {'CN1C(=O)N(C)C(=O)C(N(C)C=N2)=C12': [{'id': 534, 'in_db': True, 'in_drug': True, 'kekule_scafsmi': 'O=C1NC(=O)C2=C(N=CN2)N1', 'nass_active': 627, 'nass_tested': 896, 'ncpd_active': 2018, 'ncpd_tested': 8040, 'ncpd_total': 8040, 'nsam_active': 7527, 'nsam_tested': 1455517, 'nsub_active': 2201, 'nsub_tested': 12574, 'nsub_total': 12574, 'prank': 5593, 'pscore': 37.0, 'scafsmi': 'O=c1[nH]c(=O)c2[nH]cnc2[nH]1', 'scaftree': '534'}]}
 ```
-Additional examples can be seen in the [example_scripts/](example_scripts/) subdirectory. The API docs page (http://localhost:8000/apidocs/) includes information on all API calls.
+Additional examples can be seen in the [example_scripts/](example_scripts/) subdirectory. 
 
 ## Setup (Development)
 1. Install the badapple_classic and badapple2 DBs by following the instructions [here](https://github.com/unmtransinfo/Badapple2/blob/main/README.md)
