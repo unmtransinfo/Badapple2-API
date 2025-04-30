@@ -14,7 +14,7 @@ services:
         - TZ=${TZ}
     container_name: badapple_classic_db
     ports:
-      - "${DB_PORT}:${DB_PORT}"
+      - "127.0.0.1:${DB_PORT}:${DB_PORT}"
     environment:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
@@ -48,7 +48,7 @@ services:
         - TZ=${TZ}
     container_name: badapple2_db
     ports:
-      - "${DB2_PORT}:${DB2_PORT}"
+      - "127.0.0.1:${DB2_PORT}:${DB2_PORT}"
     environment:
       - DB_NAME=${DB2_NAME}
       - DB_USER=${DB2_USER}
@@ -73,7 +73,7 @@ services:
     build:
       context: ./app
     ports:
-      - "${APP_PORT}:${APP_PORT}"
+      - "127.0.0.1:${APP_PORT}:${APP_PORT}"
     environment:
       - APP_PORT=${APP_PORT}
       - DB_HOST=badapple_db
@@ -104,8 +104,8 @@ services:
     env_file:
       - local.env
     ports:
-      - "${UI_PORT}:8080" # Expose UI directly
-    command: npx vite --host 0.0.0.0 --port 8080
+      - "127.0.0.1:${UI_PORT}:8080"
+    command: npx vite --port 8080
     networks:
       - badapple_network
 
