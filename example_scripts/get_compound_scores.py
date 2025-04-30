@@ -2,8 +2,7 @@
 @author Jack Ringer
 Date: 4/30/2025
 Description:
-Get the promiscuity scores for all scaffolds for compounds from a given TSV file
-using API. 
+Get the promiscuity scores for all scaffolds for compounds from a given TSV file using API.
 """
 
 import argparse
@@ -80,9 +79,17 @@ def parse_args(parser: argparse.ArgumentParser):
         type=int,
         required=False,
         default=0,
-        help="(Localhost only) API port. Provide only if you have setup and would like to use the local (development version) of Badapple2-API. Instructions for local setup available here: https://github.com/unmtransinfo/Badapple2-API",
+        help="(Localhost only) API port. Provide only if you have setup and would like to use the local version of Badapple2-API.",
     )
     return parser.parse_args()
+
+
+def read_df(fpath: str, delim: str, header: bool) -> pd.DataFrame:
+    if header:
+        df = pd.read_csv(fpath, sep=delim)
+    else:
+        df = pd.read_csv(fpath, sep=delim, header=None)
+    return df
 
 
 def main(args):
@@ -96,14 +103,12 @@ def main(args):
     else:
         BASE_URL = "https://chiltepin.health.unm.edu/badapple2/api/v1"
     API_URL = f"{BASE_URL}/compound_search/get_associated_scaffolds_ordered"
-    cpd_df = pd.read_csv(args.input_dsv_file, args.idelim, args.iheader)
+    cpd_df = read_df(args.input_dsv_file, args.idelim, args.iheader)
     smiles_col_name = cpd_df.columns[args.smiles_column]
     names_col_name = cpd_df.columns[args.name_column]
 
     n_compound_total = len(cpd_df)
     batches = np.arange(n_compound_total) // batch_size
-    total_batches = (n_compound_total // batch_size) + 1
-    print("test")
     with open(args.output_tsv, "w") as output_file:
         out_writer = csv.writer(output_file, delimiter="\t")
         out_header = [
@@ -128,9 +133,7 @@ def main(args):
 
         out_writer.writerow(out_header)
         molIdx = 0
-        total_batches = (n_compound_total // batch_size) + 1
-        for batch_num, sub_df in cpd_df.groupby(batches):
-            print(f"Completed batch {batch_num}/{total_batches}")
+        for batch_num, sub_df in tqdm(cpd_df.groupby(batches)):
             smiles_list = ",".join(sub_df[smiles_col_name].tolist())
             names_list = ",".join(sub_df[names_col_name].tolist())
             response = requests.get(
