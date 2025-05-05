@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir pip-tools && \
-    pip-sync && \
+    pip-sync --pip-args "--timeout 100" && \
     pip uninstall -y pip-tools
 
 COPY . .
