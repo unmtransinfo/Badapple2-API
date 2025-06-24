@@ -5,7 +5,8 @@ python-dotenv
 flasgger
 rdkit
 scaffoldgraph[rdkit]
+rdkit==2024.03.3 # match environment.yaml from Badapple2 repo
 useful_rdkit_utils
 pandas
-psycopg2
+psycopg2-binary
 gunicorn
