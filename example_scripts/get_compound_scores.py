@@ -135,7 +135,7 @@ def main(args):
         molIdx = 0
         for batch_num, sub_df in tqdm(cpd_df.groupby(batches)):
             smiles_list = ",".join(sub_df[smiles_col_name].tolist())
-            names_list = ",".join(sub_df[names_col_name].tolist())
+            names_list = ",".join(sub_df[names_col_name].apply(str).tolist())
             response = requests.get(
                 API_URL,
                 params={
