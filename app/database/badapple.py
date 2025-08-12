@@ -1,5 +1,5 @@
 """
-@author Jack Ringer
+@author <me>
 Date: 8/28/2024
 Description:
 Class for operations with badapple DBs (badapple_classic and badapple2).
@@ -22,26 +22,38 @@ def connect(db_name: str):
     )
 
 
-def select(query: sql.SQL, db_name: str):
-    connection = connect(db_name)
-    return execute_query(query, connection)
+# TODO: don't create new connection each time
+def select(query: sql.SQL, db_name: str, connection=None, cursor=None):
+    cleanup = False
+    if connection is None:
+        connection = connect(db_name)
+        cleanup = True
+    result = execute_query(query, connection, cursor)
+    if cleanup:
+        connection.close()
+    return result
 
 
-def execute_query(query: sql.SQL, connection):
-    cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+def execute_query(query: sql.SQL, connection, cursor=None):
+    cleanup = False
     try:
+        if cursor is None:
+            cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cleanup = True
         cursor.execute(query)
         result = cursor.fetchall()
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
         raise error
     finally:
-        cursor.close()
-        connection.close()
+        if cleanup:
+            cursor.close()
     return result
 
 
-def search_scaffold_by_smiles(scafsmi: str, db_name: str):
+def search_scaffold_by_smiles(
+    scafsmi: str, db_name: str, db_connection=None, db_cursor=None
+):
     # here we assume the given scafsmi is None if it was not a valid SMILES
     # and that the scafsmi was canonicalized (much faster to search scafsmi than use structural search!)
     if scafsmi is None:
@@ -49,7 +61,7 @@ def search_scaffold_by_smiles(scafsmi: str, db_name: str):
     query = sql.SQL("SELECT * from scaffold where scafsmi={scafsmi} LIMIT 1").format(
         scafsmi=sql.Literal(scafsmi)
     )
-    return select(query, db_name)
+    return select(query, db_name, db_connection, db_cursor)
 
 
 def search_scaffold_by_id(scafid: str, db_name: str):

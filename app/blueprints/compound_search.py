@@ -8,6 +8,8 @@ For information on what each of the API calls do see api_spec.yml.
 
 from collections import defaultdict
 
+import psycopg2
+import psycopg2.extras
 from database import badapple
 from flask import Blueprint, abort, jsonify, request
 from utils.process_scaffolds import get_scaffolds_single_mol
@@ -37,8 +39,12 @@ def _get_associated_scaffolds_from_list(
 
         scaffolds = scaf_res["scaffolds"]
         scaffold_info_list = []
+        db_connection = badapple.connect(db_name)
+        db_cursor = db_connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         for scafsmi in scaffolds:
-            scaf_info = badapple.search_scaffold_by_smiles(scafsmi, db_name)
+            scaf_info = badapple.search_scaffold_by_smiles(
+                scafsmi, db_name, db_connection, db_cursor
+            )
             if len(scaf_info) < 1:
                 scaf_info = {
                     "scafsmi": scafsmi,
@@ -50,6 +56,8 @@ def _get_associated_scaffolds_from_list(
             scaffold_info_list.append(scaf_info)
 
         result[smiles] = scaffold_info_list
+    db_cursor.close()
+    db_connection.close()
     return result
 
 
