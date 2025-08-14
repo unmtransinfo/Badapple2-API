@@ -8,9 +8,7 @@ For information on what each of the API calls do see api_spec.yml.
 
 from collections import defaultdict
 
-import psycopg2
-import psycopg2.extras
-from database import badapple
+from database.badapple import BadAppleSession
 from flask import Blueprint, abort, jsonify, request
 from utils.process_scaffolds import get_scaffolds_single_mol
 from utils.request_processing import (
@@ -30,34 +28,28 @@ def _get_associated_scaffolds_from_list(
     Helper function, returns a dictionary mapping SMILES to associated scaffolds + info.
     """
     result = {}
+    with BadAppleSession(db_name) as db_session:
+        for smiles in smiles_list:
+            scaf_res = get_scaffolds_single_mol(smiles, name="", max_rings=max_rings)
+            if scaf_res == {}:
+                # ignore invalid SMILES
+                continue
 
-    for smiles in smiles_list:
-        scaf_res = get_scaffolds_single_mol(smiles, name="", max_rings=max_rings)
-        if scaf_res == {}:
-            # ignore invalid SMILES
-            continue
-
-        scaffolds = scaf_res["scaffolds"]
-        scaffold_info_list = []
-        db_connection = badapple.connect(db_name)
-        db_cursor = db_connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        for scafsmi in scaffolds:
-            scaf_info = badapple.search_scaffold_by_smiles(
-                scafsmi, db_name, db_connection, db_cursor
-            )
-            if len(scaf_info) < 1:
-                scaf_info = {
-                    "scafsmi": scafsmi,
-                    "in_db": False,
-                }
-            else:
-                scaf_info = dict(scaf_info[0])
-                scaf_info["in_db"] = True
-            scaffold_info_list.append(scaf_info)
+            scaffolds = scaf_res["scaffolds"]
+            scaffold_info_list = []
+            for scafsmi in scaffolds:
+                scaf_info = db_session.search_scaffold_by_smiles(scafsmi)
+                if len(scaf_info) < 1:
+                    scaf_info = {
+                        "scafsmi": scafsmi,
+                        "in_db": False,
+                    }
+                else:
+                    scaf_info = dict(scaf_info[0])
+                    scaf_info["in_db"] = True
+                scaffold_info_list.append(scaf_info)
 
         result[smiles] = scaffold_info_list
-    db_cursor.close()
-    db_connection.close()
     return result
 
 
@@ -104,8 +96,9 @@ def get_associated_scaffolds_ordered():
 @compound_search.route("/get_associated_substance_ids", methods=["GET"])
 def get_associated_substance_ids():
     cid_list = process_integer_list_input(request, "CIDs", 1000)
-    database = get_database(request)
-    result = badapple.get_associated_sids(cid_list, database)
+    db_name = get_database(request)
+    with BadAppleSession(db_name) as db_session:
+        result = db_session.get_associated_sids(cid_list)
 
     # combine dicts with shared CID
     combined_result = defaultdict(list)

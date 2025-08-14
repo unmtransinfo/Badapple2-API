@@ -1,9 +1,11 @@
 """
-@author <me>
+@author Jack Ringer
 Date: 8/28/2024
 Description:
 Class for operations with badapple DBs (badapple_classic and badapple2).
 """
+
+from typing import Dict, List
 
 import psycopg2
 import psycopg2.extras
@@ -12,94 +14,44 @@ from flask import abort
 from psycopg2 import sql
 
 
-def connect(db_name: str):
-    return psycopg2.connect(
-        host=DB_NAME2HOST[db_name],
-        database=db_name,
-        user=DB_NAME2USER[db_name],
-        password=DB_NAME2PASSWORD[db_name],
-        port=DB_NAME2PORT[db_name],
-    )
-
-
-# TODO: don't create new connection each time
-def select(query: sql.SQL, db_name: str, connection=None, cursor=None):
-    cleanup = False
-    if connection is None:
-        connection = connect(db_name)
-        cleanup = True
-    result = execute_query(query, connection, cursor)
-    if cleanup:
-        connection.close()
-    return result
-
-
-def execute_query(query: sql.SQL, connection, cursor=None):
-    cleanup = False
-    try:
-        if cursor is None:
-            cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-            cleanup = True
-        cursor.execute(query)
-        result = cursor.fetchall()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-        raise error
-    finally:
-        if cleanup:
-            cursor.close()
-    return result
-
-
-def search_scaffold_by_smiles(
-    scafsmi: str, db_name: str, db_connection=None, db_cursor=None
-):
+# queries used to read from Badapple databases
+def _build_scaffold_by_smiles_query(scafsmi: str):
     # here we assume the given scafsmi is None if it was not a valid SMILES
     # and that the scafsmi was canonicalized (much faster to search scafsmi than use structural search!)
     if scafsmi is None:
         return abort(400, "Invalid SMILES provided")
-    query = sql.SQL("SELECT * from scaffold where scafsmi={scafsmi} LIMIT 1").format(
+    return sql.SQL("SELECT * from scaffold where scafsmi={scafsmi} LIMIT 1;").format(
         scafsmi=sql.Literal(scafsmi)
     )
-    return select(query, db_name, db_connection, db_cursor)
 
 
-def search_scaffold_by_id(scafid: str, db_name: str):
-    query = sql.SQL("SELECT * from scaffold where id={scafid} LIMIT 1").format(
+def _build_scaffold_by_id_query(scafid: str):
+    return sql.SQL("SELECT * from scaffold where id={scafid} LIMIT 1;").format(
         scafid=sql.Literal(scafid)
     )
-    return select(query, db_name)
 
 
-def get_scaffold_id(scafsmi: str, db_name: str):
-    query = sql.SQL("SELECT id FROM mols_scaf WHERE scafmol @= {scafsmi};").format(
+def _build_scaffold_id_query(scafsmi: str):
+    return sql.SQL("SELECT id FROM mols_scaf WHERE scafmol @= {scafsmi};").format(
         scafsmi=sql.Literal(scafsmi)
     )
-    result = None
-    try:
-        result = select(query, db_name)
-    except psycopg2.errors.DataException:
-        return abort(400, "Invalid SMILES provided")
-    return result
 
 
-def get_associated_compounds(scafid: int, db_name: str):
-    query = sql.SQL(
-        "select * from compound where cid IN (select cid from scaf2cpd where scafid={scafid})"
+def _build_associated_compounds_query(scafid: int):
+    return sql.SQL(
+        "SELECT * FROM compound WHERE cid IN (SELECT cid FROM scaf2cpd WHERE scafid={scafid});"
     ).format(scafid=sql.Literal(scafid))
-    return select(query, db_name)
 
 
-def get_associated_sids(cid_list: list[int], db_name: str):
+def _build_associated_sids_query(cid_list: list[int]):
     formatted_cid_list = sql.SQL(", ").join(map(sql.Literal, cid_list))
-    query = sql.SQL("SELECT * FROM sub2cpd WHERE cid IN ({cid_list})").format(
+    return sql.SQL("SELECT * FROM sub2cpd WHERE cid IN ({cid_list})").format(
         cid_list=formatted_cid_list
     )
-    return select(query, db_name)
 
 
-def get_associated_assay_ids(scafid: int, db_name: str):
-    query = sql.SQL(
+def _build_associated_assay_ids_query(scafid: int):
+    return sql.SQL(
         """SELECT DISTINCT aid 
 FROM activity 
 WHERE sid IN (
@@ -112,19 +64,17 @@ WHERE cid IN (
 )
 ) ORDER BY aid;"""
     ).format(scafid=sql.Literal(scafid))
-    return select(query, db_name)
 
 
-def get_assay_outcomes(sid: int, db_name: str):
-    query = sql.SQL("SELECT aid,outcome FROM activity WHERE sid={sid}").format(
+def _build_assay_outcomes_query(sid: int):
+    return sql.SQL("SELECT aid,outcome FROM activity WHERE sid={sid}").format(
         sid=sql.Literal(sid)
     )
-    return select(query, db_name)
 
 
 # badapple2+ only
-def get_active_targets(scafid: int, db_name: str = "badapple2"):
-    query = sql.SQL(
+def _build_active_targets_query(scafid: int) -> sql.SQL:
+    return sql.SQL(
         """
 SELECT 
 target.*, 
@@ -142,11 +92,105 @@ scaf2activeaid.scafid = {scafid}
 ORDER BY aid;
 """
     ).format(scafid=sql.Literal(scafid))
-    return select(query, db_name)
 
 
-def get_associated_drugs(scafid: int, db_name: str = "badapple2"):
-    query = sql.SQL(
+def _build_associated_drugs_query(scafid: int) -> sql.SQL:
+    return sql.SQL(
         "SELECT * FROM drug WHERE drug_id IN (SELECT drug_id FROM scaf2drug WHERE scafid={scafid});"
     ).format(scafid=sql.Literal(scafid))
-    return select(query, db_name)
+
+
+# function to execute query using db cursor
+def execute_query(query: sql.SQL, cursor) -> List[Dict]:
+    """Execute a query and return results."""
+    try:
+        cursor.execute(query)
+        return cursor.fetchall()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+        raise error
+
+
+# error handling
+def _handle_data_exception(e):
+    if isinstance(e, psycopg2.errors.DataException):
+        return abort(400, "Invalid SMILES provided")
+    raise e
+
+
+class BadAppleSession:
+    """
+    Use this when you need to run multiple queries and want to reuse
+    the same connection/cursor to avoid overhead.
+
+    Usage:
+        with BadAppleSession('badapple2') as session:
+            results1 = session.search_scaffold_by_smiles(smiles1)
+            results2 = session.get_associated_compounds(scafid)
+            results3 = session.get_active_targets(scafid)
+    """
+
+    def __init__(self, db_name: str):
+        self.db_name = db_name
+        self.connection = None
+        self.cursor = None
+
+    def __enter__(self):
+        self.connection = psycopg2.connect(
+            host=DB_NAME2HOST[self.db_name],
+            database=self.db_name,
+            user=DB_NAME2USER[self.db_name],
+            password=DB_NAME2PASSWORD[self.db_name],
+            port=DB_NAME2PORT[self.db_name],
+        )
+        self.cursor = self.connection.cursor(
+            cursor_factory=psycopg2.extras.RealDictCursor
+        )
+        return self
+
+    def __exit__(self, exception_type, exception_value, exception_traceback):
+        # NOTE: this API is read-only,
+        # but if we added write methods we'd want to handle exceptions more robustly and rollback any changes
+        global N_CLOSES
+        if self.cursor:
+            self.cursor.close()
+        if self.connection:
+            self.connection.close()
+
+    def _execute_query_builder(self, query_builder, *args, error_handler=None):
+        try:
+            query = query_builder(*args)
+            return execute_query(query, self.cursor)
+        except Exception as e:
+            if error_handler:
+                return error_handler(e)
+            raise
+
+    def search_scaffold_by_smiles(self, scafsmi: str) -> List[Dict]:
+        return self._execute_query_builder(_build_scaffold_by_smiles_query, scafsmi)
+
+    def search_scaffold_by_id(self, scafid: str) -> List[Dict]:
+        return self._execute_query_builder(_build_scaffold_by_id_query, scafid)
+
+    def get_scaffold_id(self, scafsmi: str) -> List[Dict]:
+        return self._execute_query_builder(
+            _build_scaffold_id_query, scafsmi, error_handler=_handle_data_exception
+        )
+
+    def get_associated_compounds(self, scafid: int) -> List[Dict]:
+        return self._execute_query_builder(_build_associated_compounds_query, scafid)
+
+    def get_associated_sids(self, cid_list: List[int]) -> List[Dict]:
+        return self._execute_query_builder(_build_associated_sids_query, cid_list)
+
+    def get_associated_assay_ids(self, scafid: int) -> List[Dict]:
+        return self._execute_query_builder(_build_associated_assay_ids_query, scafid)
+
+    def get_assay_outcomes(self, sid: int) -> List[Dict]:
+        return self._execute_query_builder(_build_assay_outcomes_query, sid)
+
+    def get_active_targets(self, scafid: int) -> List[Dict]:
+        return self._execute_query_builder(_build_active_targets_query, scafid)
+
+    def get_associated_drugs(self, scafid: int) -> List[Dict]:
+        return self._execute_query_builder(_build_associated_drugs_query, scafid)
