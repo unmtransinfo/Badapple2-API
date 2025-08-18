@@ -53,6 +53,7 @@ def create_app():
         "ui_params": {
             "url_prefix": (f"/{URL_PREFIX}") if IN_PROD else "",
         },
+        "auth": {},  # no auth
     }
 
     # update description if in production
