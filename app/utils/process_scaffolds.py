@@ -45,6 +45,9 @@ def get_mol2scaf_dict(network: CustomHierS) -> dict[str, list[str]]:
 
 
 def get_scaffolds_single_mol(mol_smiles: str, name: str, max_rings: int):
+    if mol_smiles == "":
+        # technically the empty string is considered a valid SMILES, but don't bother processing
+        return {}
     # setup network
     smiles_dict = {"Smiles": [mol_smiles], "Name": [name]}
     smiles_df = pd.DataFrame.from_dict(smiles_dict)
