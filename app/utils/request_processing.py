@@ -18,7 +18,9 @@ def int_check(
     upper_limit: Union[None, int] = None,
     default_val: Union[None, int] = None,
 ):
-    n = request.args.get(var_name, type=int) or default_val
+    n = request.args.get(var_name, type=int)
+    if n is None:
+        n = default_val
     try:
         n = int(n)
     except:
