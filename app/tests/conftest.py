@@ -17,8 +17,13 @@ from app import app
 app.config["TESTING"] = True
 
 
+@pytest.fixture(scope="session")
+def flask_app():
+    return app
+
+
 @pytest.fixture(scope="module")
-def test_client():
-    with app.test_client() as testing_client:
-        with app.app_context():
+def test_client(flask_app):
+    with flask_app.test_client() as testing_client:
+        with flask_app.app_context():
             yield testing_client
