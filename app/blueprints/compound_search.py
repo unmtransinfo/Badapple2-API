@@ -49,7 +49,7 @@ def _get_associated_scaffolds_from_list(
                     scaf_info["in_db"] = True
                 scaffold_info_list.append(scaf_info)
 
-        result[smiles] = scaffold_info_list
+            result[smiles] = scaffold_info_list
     return result
 
 
