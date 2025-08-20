@@ -154,7 +154,6 @@ class BadAppleSession:
     def __exit__(self, exception_type, exception_value, exception_traceback):
         # NOTE: this API is read-only,
         # but if we added write methods we'd want to handle exceptions more robustly and rollback any changes
-        global N_CLOSES
         if self.cursor:
             self.cursor.close()
         if self.connection:
