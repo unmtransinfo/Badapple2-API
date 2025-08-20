@@ -143,6 +143,9 @@ class BadAppleSession:
             password=DB_NAME2PASSWORD[self.db_name],
             port=DB_NAME2PORT[self.db_name],
         )
+        self.connection.set_session(
+            readonly=True
+        )  # user in prod will also be read-only, but this is an additional safety measure
         self.cursor = self.connection.cursor(
             cursor_factory=psycopg2.extras.RealDictCursor
         )
