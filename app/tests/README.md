@@ -16,8 +16,15 @@ This directory contains tests written with `pytest` to check the validity of the
    conda create -n badapple2-api python=3.12 && conda activate badapple2-api
    ```
 4. Run the tests:
+
    ```
    python -m pytest
+   ```
+
+   If you want to include all tests (i.e., including those that require the `activity` table):
+
+   ```
+   python -m pytest --requires_activity
    ```
 
 ## Acknowledgment
