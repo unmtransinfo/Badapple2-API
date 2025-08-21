@@ -52,10 +52,15 @@ def get_database(
     return database
 
 
-def process_list_input(request, param_name: str, limit: int):
-    value_list = request.args.get(param_name, type=str)
-    if not value_list:
+def get_required_param(request, param_name: str, type):
+    val = request.args.get(param_name, type=type)
+    if not val:  # None or empty
         return abort(400, f"No {param_name} provided")
+    return val
+
+
+def process_list_input(request, param_name: str, limit: int):
+    value_list = get_required_param(request, param_name, type=str)
     value_list = value_list.split(",")
     if len(value_list) > limit:
         return abort(

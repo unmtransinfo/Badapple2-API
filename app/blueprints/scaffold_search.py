@@ -9,7 +9,7 @@ For information on what each of the API calls do see api_spec.yml.
 from config import ALLOWED_DB_NAMES
 from database.badapple import BadAppleSession
 from flask import Blueprint, jsonify, request
-from utils.request_processing import get_database, int_check
+from utils.request_processing import get_database, get_required_param, int_check
 
 scaffold_search = Blueprint("scaffold_search", __name__, url_prefix="/scaffold_search")
 TAGS = ["Scaffold Search"]
@@ -17,7 +17,7 @@ TAGS = ["Scaffold Search"]
 
 @scaffold_search.route("/get_scaffold_id", methods=["GET"])
 def get_scaffold_id():
-    scaf_smiles = request.args.get("SMILES", type=str)
+    scaf_smiles = get_required_param(request, "SMILES", type=str)
     db_name = get_database(request)
     with BadAppleSession(db_name) as db_session:
         result = db_session.get_scaffold_id(scaf_smiles)
