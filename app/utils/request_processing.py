@@ -24,7 +24,10 @@ def int_check(
     try:
         n = int(n)
     except:
-        return abort(400, f"Invalid {var_name} provided. Expected int but got: {n}")
+        return abort(
+            400,
+            f"Invalid {var_name} provided. Expected int but got: {request.args.get(var_name)}",
+        )
     if lower_limit is not None and n < lower_limit:
         return abort(400, f"Error: {var_name} must be greater than {lower_limit}")
     if upper_limit is not None and n > upper_limit:
