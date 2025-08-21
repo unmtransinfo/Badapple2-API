@@ -46,7 +46,7 @@ def get_associated_compounds():
     scafid = int_check(request, "scafid")
     db_name = get_database(request)
     with BadAppleSession(db_name) as db_session:
-        result = db_session.get_associated_compounds(scafid, db_name)
+        result = db_session.get_associated_compounds(scafid)
     return jsonify(result)
 
 
