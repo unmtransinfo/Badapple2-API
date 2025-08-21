@@ -7,6 +7,8 @@ Note here that I'm just checking that the structure of results fetched by the AP
 Verifying that the DBs themselves are "accurate" is part of the DB construction.
 """
 
+from tests.helpers import validate_scaffold_keys
+
 
 class TestGetAssociatedSubstanceIds:
     """Functional tests for get_associated_substance_ids endpoint."""
@@ -114,27 +116,7 @@ def validate_scaffold_data(scaffold_data: list, assert_not_processed: bool):
         assert "in_db" in d.keys()
         assert "scafsmi" in d.keys()
         if d["in_db"]:
-            expected_keys = [
-                "id",
-                "in_db",
-                "in_drug",
-                "kekule_scafsmi",
-                "nass_active",
-                "nass_tested",
-                "ncpd_active",
-                "ncpd_tested",
-                "ncpd_total",
-                "nsam_active",
-                "nsam_tested",
-                "nsub_active",
-                "nsub_tested",
-                "nsub_total",
-                "prank",
-                "pscore",
-                "scaftree",
-            ]
-            for ek in expected_keys:
-                assert ek in d.keys()
+            validate_scaffold_keys(d)
 
 
 class TestGetAssociatedScaffolds:
