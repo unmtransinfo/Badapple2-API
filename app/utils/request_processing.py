@@ -18,11 +18,16 @@ def int_check(
     upper_limit: Union[None, int] = None,
     default_val: Union[None, int] = None,
 ):
-    n = request.args.get(var_name, type=int) or default_val
+    n = request.args.get(var_name, type=int)
+    if n is None:
+        n = default_val
     try:
         n = int(n)
     except:
-        return abort(400, f"Invalid {var_name} provided. Expected int but got: {n}")
+        return abort(
+            400,
+            f"Invalid {var_name} provided. Expected int but got: {request.args.get(var_name)}",
+        )
     if lower_limit is not None and n < lower_limit:
         return abort(400, f"Error: {var_name} must be greater than {lower_limit}")
     if upper_limit is not None and n > upper_limit:
@@ -50,10 +55,15 @@ def get_database(
     return database
 
 
-def process_list_input(request, param_name: str, limit: int):
-    value_list = request.args.get(param_name, type=str)
-    if not value_list:
+def get_required_param(request, param_name: str, type):
+    val = request.args.get(param_name, type=type)
+    if not val:  # None or empty
         return abort(400, f"No {param_name} provided")
+    return val
+
+
+def process_list_input(request, param_name: str, limit: int):
+    value_list = get_required_param(request, param_name, type=str)
     value_list = value_list.split(",")
     if len(value_list) > limit:
         return abort(

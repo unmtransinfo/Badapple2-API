@@ -10,3 +10,4 @@ useful_rdkit_utils
 pandas
 psycopg2-binary
 gunicorn
+pytest
