@@ -4,6 +4,8 @@ This directory contains example scripts which make use of the Badapple2 API.
 
 ## Script Usage
 
+**Prior to running scripts make sure you are in the badapple2-api environment, see [here](../docs/README.md#python-environment-setup)**
+
 ### `get_compound_scores.py`
 
 This script processes an input CSV/TSV file containing compound structures and outputs information on all of the scaffolds linked to these compounds in the Badapple database.

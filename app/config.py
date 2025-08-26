@@ -8,6 +8,7 @@ APP_NAME = environ.get("APP_NAME")
 APP_PORT = environ.get("APP_PORT")
 APP_URL = environ.get("APP_URL") or "localhost"
 URL_PREFIX = environ.get("URL_PREFIX") or ""
+MAX_CONTENT_LENGTH = int(environ.get("MAX_CONTENT_LENGTH"))
 
 # Database
 databases = [
@@ -39,12 +40,18 @@ for db in databases:
     DB_NAME2PORT[db["name"]] = db["port"]
     ALLOWED_DB_NAMES.append(db["name"])
 
+DEFAULT_DB = environ.get("DB2_NAME")
+
 
 # API limits
 # limits on max rings
 # these should match api_spec.yml
 MAX_RING_LOWER_BOUND = 1
 MAX_RING_UPPER_BOUND = 10
+MAX_RING_DEFAULT = 5
+
+# limits on length of input lists (e.g., SMILES)
+MAX_LIST_LENGTH = 1000
 
 # Only include this page description if in prod
 PROD_ONLY_ADDL_DESCRIPTION = """

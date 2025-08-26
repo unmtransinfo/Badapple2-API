@@ -27,6 +27,7 @@ APP_NAME=Badapple2-API
 APP_PORT=8001
 URL_PREFIX=badapple2
 APP_URL=chiltepin.health.unm.edu/${URL_PREFIX}
+MAX_CONTENT_LENGTH=1048576 # 1MB - limits size of POST requests
 VITE_API_FETCH_SCAFFOLDS_URL=https://${APP_URL}/api/v1/compound_search/get_associated_scaffolds_ordered
 VITE_API_FETCH_DRUGS_URL=https://${APP_URL}/api/v1/scaffold_search/get_associated_drugs
 VITE_API_FETCH_TARGETS_URL=https://${APP_URL}/api/v1/scaffold_search/get_active_targets
