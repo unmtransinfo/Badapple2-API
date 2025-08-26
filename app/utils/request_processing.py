@@ -10,6 +10,7 @@ from typing import Union
 from config import (
     ALLOWED_DB_NAMES,
     DEFAULT_DB,
+    MAX_LIST_LENGTH,
     MAX_RING_LOWER_BOUND,
     MAX_RING_UPPER_BOUND,
 )
@@ -66,7 +67,7 @@ def get_required_param(request, param_name: str, type):
     return val
 
 
-def process_list_input(request, param_name: str, limit: int):
+def process_list_input(request, param_name: str, limit: int = MAX_LIST_LENGTH):
     value_list = get_required_param(request, param_name, type=str)
     value_list = value_list.split(",")
     if len(value_list) > limit:
@@ -77,7 +78,7 @@ def process_list_input(request, param_name: str, limit: int):
     return value_list
 
 
-def process_integer_list_input(request, param_name: str, limit):
+def process_integer_list_input(request, param_name: str, limit: int = MAX_LIST_LENGTH):
     int_list = process_list_input(request, param_name, limit)
     try:
         int_list = [int(cid) for cid in int_list]

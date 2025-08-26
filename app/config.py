@@ -49,6 +49,9 @@ DEFAULT_DB = environ.get("DB2_NAME")
 MAX_RING_LOWER_BOUND = 1
 MAX_RING_UPPER_BOUND = 10
 
+# limits on length of input lists (e.g., SMILES)
+MAX_LIST_LENGTH = 1000
+
 # Only include this page description if in prod
 PROD_ONLY_ADDL_DESCRIPTION = """
 \n\n
