@@ -11,6 +11,7 @@ from config import (
     ALLOWED_DB_NAMES,
     DEFAULT_DB,
     MAX_LIST_LENGTH,
+    MAX_RING_DEFAULT,
     MAX_RING_LOWER_BOUND,
     MAX_RING_UPPER_BOUND,
 )
@@ -41,7 +42,7 @@ def int_check(
     return n
 
 
-def get_max_rings(request, default_val: int = 10):
+def get_max_rings(request, default_val: int = MAX_RING_DEFAULT):
     max_rings = int_check(
         request, "max_rings", MAX_RING_LOWER_BOUND, MAX_RING_UPPER_BOUND, default_val
     )

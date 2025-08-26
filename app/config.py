@@ -48,6 +48,7 @@ DEFAULT_DB = environ.get("DB2_NAME")
 # these should match api_spec.yml
 MAX_RING_LOWER_BOUND = 1
 MAX_RING_UPPER_BOUND = 10
+MAX_RING_DEFAULT = 5
 
 # limits on length of input lists (e.g., SMILES)
 MAX_LIST_LENGTH = 1000

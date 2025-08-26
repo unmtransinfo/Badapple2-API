@@ -149,7 +149,7 @@ components:
       required: false
       minimum: 1
       maximum: 10
-      default: 10
+      default: 5
       description: Ignore compounds with more than the specified number of ring systems (must be between 1 and 10).
     SMILESList:
       name: SMILES
