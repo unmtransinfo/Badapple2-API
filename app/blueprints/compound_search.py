@@ -14,6 +14,7 @@ from utils.process_scaffolds import get_scaffolds_single_mol
 from utils.request_processing import (
     get_database,
     get_max_rings,
+    param_given,
     process_integer_list_input,
     process_list_input,
 )
@@ -53,32 +54,43 @@ def _get_associated_scaffolds_from_list(
     return result
 
 
-@compound_search.route("/get_associated_scaffolds", methods=["GET"])
-def get_associated_scaffolds():
-    smiles_list = process_list_input(request, "SMILES", 1000)
+# process request params for get_associated_scaffolds and get_associated_scaffolds_ordered
+def _get_request_params(request):
+    smiles_list = process_list_input(request, "SMILES")
     max_rings = get_max_rings(request)
     database = get_database(request)
+    name_list = smiles_list
+    if param_given(request, "Names"):
+        name_list = process_list_input(request, "Names")
+    return smiles_list, max_rings, database, name_list
+
+
+# NOTE: "POST" is allowed here because we want to allow users to submit more than a handful of compounds at a time
+# "GET" prevents large requests (max 8190 bytes, as set by gunicorn)
+# in an ideal world these methods would use QUERY (https://httpwg.org/http-extensions/draft-ietf-httpbis-safe-method-w-body.html)
+# but until QUERY becomes standard we'll have to do with this
+# see also: https://medium.com/swlh/why-would-you-use-post-instead-of-get-for-a-read-operation-381e4bdf3b9a
+@compound_search.route("/get_associated_scaffolds", methods=["GET", "POST"])
+def get_associated_scaffolds():
+    smiles_list, max_rings, database, _ = _get_request_params(request)
     result = _get_associated_scaffolds_from_list(smiles_list, max_rings, database)
     return jsonify(result)
 
 
-@compound_search.route("/get_associated_scaffolds_ordered", methods=["GET"])
+@compound_search.route("/get_associated_scaffolds_ordered", methods=["GET", "POST"])
 def get_associated_scaffolds_ordered():
-    smiles_list = process_list_input(request, "SMILES", 1000)
-    max_rings = get_max_rings(request)
-    database = get_database(request)
-    name_list = smiles_list
-    names_given = "Names" in request.args
-    if names_given:
-        name_list = process_list_input(request, "Names", 1000)
-        if len(smiles_list) != len(name_list):
-            return abort(
-                400,
-                f"Length of 'SMILES' and 'Names' list expected to match, but got lengths: {len(smiles_list)} and {len(name_list)}",
-            )
+    smiles_list, max_rings, database, name_list = _get_request_params(request)
+    # sanity check: SMILES/Names lists must match in length
+    if len(smiles_list) != len(name_list):
+        return abort(
+            400,
+            f"Length of 'SMILES' and 'Names' list expected to match, but got lengths: {len(smiles_list)} and {len(name_list)}",
+        )
+
     smiles2scaffolds = _get_associated_scaffolds_from_list(
         smiles_list, max_rings, database
     )
+
     # order output
     # one could optimize/re-write _get_associated_scaffolds_from_list for this API call, but not expecting to deal with large inputs
     result = []
@@ -90,12 +102,13 @@ def get_associated_scaffolds_ordered():
             d["scaffolds"] = None
             d["error_msg"] = "Invalid SMILES, please check input"
         result.append(d)
+
     return jsonify(result)
 
 
 @compound_search.route("/get_associated_substance_ids", methods=["GET"])
 def get_associated_substance_ids():
-    cid_list = process_integer_list_input(request, "CIDs", 1000)
+    cid_list = process_integer_list_input(request, "CIDs")
     db_name = get_database(request)
     with BadAppleSession(db_name) as db_session:
         result = db_session.get_associated_sids(cid_list)
