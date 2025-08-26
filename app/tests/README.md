@@ -11,13 +11,8 @@ This directory contains tests written with `pytest` to check the validity of the
    cp .env.example .env.test
    ```
 
-3. Setup and activate the project's virtual environment. For example, with conda use:
-   ```
-   conda create -n badapple2-api python=3.12 && conda activate badapple2-api
-   ```
-4. Install pip-tools: `pip install pip-tools`
-5. Sync the environment: `pip-sync`
-6. Run the tests:
+3. Setup and activate the project's virtual environment by following the instructions [here](../../docs/README.md#python-environment-setup)
+4. Run the tests:
 
    ```
    python -m pytest
