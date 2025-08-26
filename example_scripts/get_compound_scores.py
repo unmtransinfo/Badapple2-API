@@ -94,11 +94,15 @@ def read_df(fpath: str, delim: str, header: bool) -> pd.DataFrame:
 
 def main(args):
     batch_size = args.batch_size
-    if batch_size <= 0 or batch_size > 100:
-        raise ValueError(f"Batch size must be within [1,100]. Given: {batch_size}")
+    using_localhost = args.local_port > 0
+    max_batch_size = 1000
+    if batch_size < 0 or batch_size > max_batch_size:
+        raise ValueError(
+            f"Batch size must be within [1,{max_batch_size}]. Given: {batch_size}"
+        )
 
     BASE_URL = ""
-    if args.local_port > 0:
+    if using_localhost:
         BASE_URL = f"http://localhost:{args.local_port}/api/v1"
     else:
         BASE_URL = "https://chiltepin.health.unm.edu/badapple2/api/v1"
@@ -134,11 +138,11 @@ def main(args):
         out_writer.writerow(out_header)
         molIdx = 0
         for batch_num, sub_df in tqdm(cpd_df.groupby(batches)):
-            smiles_list = ",".join(sub_df[smiles_col_name].tolist())
-            names_list = ",".join(sub_df[names_col_name].apply(str).tolist())
-            response = requests.get(
+            smiles_list = sub_df[smiles_col_name].tolist()
+            names_list = sub_df[names_col_name].tolist()
+            response = requests.post(
                 API_URL,
-                params={
+                json={
                     "SMILES": smiles_list,
                     "Names": names_list,
                     "max_rings": args.max_rings,
@@ -147,7 +151,7 @@ def main(args):
             )
             if response.status_code != 200:
                 raise ValueError(
-                    f"Received bad response from API (you may need to lower batch_size): {response}"
+                    f"Received bad response from API (you may need to lower batch_size):\n{response}\n{response.text}"
                 )
             # data will be list of dictionaries, 1 for each mol in batch
             data = json.loads(response.text)

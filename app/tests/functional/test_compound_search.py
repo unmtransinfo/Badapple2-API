@@ -7,6 +7,8 @@ Note here that I'm just checking that the structure of results fetched by the AP
 Verifying that the DBs themselves are "accurate" is part of the DB construction.
 """
 
+from typing import Union
+
 from tests.helpers import validate_scaffold_keys
 
 
@@ -118,6 +120,12 @@ def validate_scaffold_data(scaffold_data: list, assert_not_processed: bool):
             validate_scaffold_keys(d)
 
 
+def get_input_list(input_list, method: str):
+    if method == "GET":
+        input_list = input_list.split(",")
+    return input_list
+
+
 class TestGetAssociatedScaffolds:
     """Functional tests for get_associated_scaffolds endpoint."""
 
@@ -125,39 +133,52 @@ class TestGetAssociatedScaffolds:
         self,
         test_client,
         url_prefix,
-        smiles: str = None,
+        smiles: Union[str, list[str]] = None,
         max_rings: int = None,
         database: str = None,
         status_code: int = 200,
         all_smiles_valid: bool = True,
+        duplicate_smiles: bool = False,
         assert_not_processed: bool = False,
+        method: str = "GET",
     ):
         url = f"{url_prefix}/compound_search/get_associated_scaffolds"
-        if smiles is not None:
-            url += f"?SMILES={smiles}"
-        if max_rings is not None:
-            url += f"&max_rings={max_rings}"
-        if database is not None:
-            url += f"&database={database}"
-        response = test_client.get(url)
+
+        if method == "GET":
+            if smiles is not None:
+                url += f"?SMILES={smiles}"
+            if max_rings is not None:
+                url += f"&max_rings={max_rings}"
+            if database is not None:
+                url += f"&database={database}"
+            response = test_client.get(url)
+        else:  # POST
+            json_data = {}
+            if smiles is not None:
+                json_data["SMILES"] = smiles
+            if max_rings is not None:
+                json_data["max_rings"] = max_rings
+            if database is not None:
+                json_data["database"] = database
+            response = test_client.post(url, json=json_data)
         assert response.status_code == status_code
         if status_code == 200:
             data = response.get_json()
             assert isinstance(data, dict)
-            smiles_list = smiles.split(",")
-            if all_smiles_valid:
-                assert len(data) == len(smiles_list)
+            input_smiles_list = get_input_list(smiles, method)
+
+            if all_smiles_valid and not (duplicate_smiles):
+                assert len(data) == len(input_smiles_list)
             else:
                 # this API call ignores invalid SMILES - they are given no key
-                assert len(data) < len(smiles_list)
-            if len(data) > 0:
-                # verify that all outputs were part of inputs
-                smiles_list = smiles.split(",")
-                for smiles_key in data:
-                    assert smiles_key in smiles_list
-                    # verify structure of scaffold data
-                    validate_scaffold_data(data[smiles_key], assert_not_processed)
+                assert len(data) < len(input_smiles_list)
+            # verify that all outputs were part of inputs
+            for smiles_key in data:
+                assert smiles_key in input_smiles_list
+                # verify structure of scaffold data
+                validate_scaffold_data(data[smiles_key], assert_not_processed)
 
+    # Existing GET tests
     def test_get_associated_scaffolds_single_smiles(self, test_client, url_prefix):
         smiles = "CN1C(=O)N(C)C(=O)C(N(C)C=N2)=C12"
         self.run_test(test_client, url_prefix, smiles)
@@ -197,6 +218,93 @@ class TestGetAssociatedScaffolds:
             test_client, url_prefix, smiles, max_rings=3, assert_not_processed=True
         )
 
+    # New POST tests
+    def test_get_associated_scaffolds_single_smiles_post(self, test_client, url_prefix):
+        smiles = ["CN1C(=O)N(C)C(=O)C(N(C)C=N2)=C12"]
+        self.run_test(test_client, url_prefix, smiles, method="POST")
+
+    def test_get_associated_scaffolds_multiple_smiles_post(
+        self, test_client, url_prefix
+    ):
+        smiles = [
+            "CN1C(=O)N(C)C(=O)C(N(C)C=N2)=C12",
+            "COc1cc2c(ccnc2cc1)C(O)C4CC(CC3)C(C=C)CN34",
+            "CC1(C)SC2C(NC(=O)Cc3ccccc3)C(=O)N2C1C(=O)O",
+        ]
+        self.run_test(test_client, url_prefix, smiles, method="POST")
+
+    def test_get_associated_scaffolds_no_smiles_post(self, test_client, url_prefix):
+        smiles = ""
+        self.run_test(test_client, url_prefix, smiles, status_code=400, method="POST")
+
+    def test_get_associated_scaffolds_with_invalid_smiles_post(
+        self, test_client, url_prefix
+    ):
+        smiles = ["CN1C(=O)N(C)C(=O)C(N(C)C=N2)=C12", "adadadss"]
+        self.run_test(
+            test_client, url_prefix, smiles, all_smiles_valid=False, method="POST"
+        )
+
+    def test_get_associated_scaffolds_missing_smiles_post(
+        self, test_client, url_prefix
+    ):
+        self.run_test(test_client, url_prefix, status_code=400, method="POST")
+
+    def test_get_associated_scaffolds_database_parameter_post(
+        self, test_client, url_prefix
+    ):
+        """Test with explicit database parameter via POST."""
+        smiles = ["CN1C(=O)N(C)C(=O)C(N(C)C=N2)=C12"]
+        self.run_test(
+            test_client, url_prefix, smiles, database="badapple_classic", method="POST"
+        )
+
+    def test_get_associated_scaffolds_max_rings_parameter_post(
+        self, test_client, url_prefix
+    ):
+        """Test with explicit max_rings parameter via POST."""
+        smiles = [
+            "Cn1cc(C2=C(c3cn(C4CCN(Cc5ccccn5)CC4)c4ccccc34)C(=O)NC2=O)c2ccccc21"
+        ]  # has 5 ring systems
+        self.run_test(
+            test_client,
+            url_prefix,
+            smiles,
+            max_rings=3,
+            assert_not_processed=True,
+            method="POST",
+        )
+
+    def test_get_associated_scaffolds_large_batch_post(self, test_client, url_prefix):
+        """Test POST with a large number of SMILES (the main benefit of POST)."""
+        # Create a large batch of SMILES that would be unwieldy in a GET request
+        base_smiles = "CN1C(=O)N(C)C(=O)C(N(C)C=N2)=C12"
+        large_smiles_list = [base_smiles] * 100  # 100 identical SMILES
+        self.run_test(
+            test_client,
+            url_prefix,
+            large_smiles_list,
+            duplicate_smiles=True,
+            method="POST",
+        )
+
+    def test_get_associated_scaffolds_all_parameters_post(
+        self, test_client, url_prefix
+    ):
+        """Test POST with all parameters set."""
+        smiles = [
+            "CN1C(=O)N(C)C(=O)C(N(C)C=N2)=C12",
+            "COc1cc2c(ccnc2cc1)C(O)C4CC(CC3)C(C=C)CN34",
+        ]
+        self.run_test(
+            test_client,
+            url_prefix,
+            smiles,
+            max_rings=5,
+            database="badapple_classic",
+            method="POST",
+        )
+
 
 class TestGetAssociatedScaffoldsOrdered:
     """Functional tests for get_associated_scaffolds_ordered endpoint."""
@@ -205,35 +313,52 @@ class TestGetAssociatedScaffoldsOrdered:
         self,
         test_client,
         url_prefix,
-        smiles: str = None,
-        names: str = None,
+        smiles: Union[str, list[str]] = None,
+        names: Union[str, list[str]] = None,
         max_rings: int = None,
         database: str = None,
         status_code: int = 200,
         assert_not_processed: bool = False,
+        method: str = "GET",
     ):
+
         url = f"{url_prefix}/compound_search/get_associated_scaffolds_ordered"
-        if smiles is not None:
-            url += f"?SMILES={smiles}"
-        if names is not None:
-            url += f"&Names={names}"
-        if max_rings is not None:
-            url += f"&max_rings={max_rings}"
-        if database is not None:
-            url += f"&database={database}"
-        response = test_client.get(url)
+
+        if method == "GET":
+            if smiles is not None:
+                url += f"?SMILES={smiles}"
+            if names is not None:
+                url += f"&Names={names}"
+            if max_rings is not None:
+                url += f"&max_rings={max_rings}"
+            if database is not None:
+                url += f"&database={database}"
+            response = test_client.get(url)
+        else:  # POST
+            json_data = {}
+            if smiles is not None:
+                json_data["SMILES"] = smiles
+            if names is not None:
+                json_data["Names"] = names
+            if max_rings is not None:
+                json_data["max_rings"] = max_rings
+            if database is not None:
+                json_data["database"] = database
+            response = test_client.post(url, json=json_data)
+
         assert response.status_code == status_code
         if status_code == 200:
             data = response.get_json()
-            smiles_list = smiles.split(",")
-            names_list = smiles_list
+            input_smiles_list = get_input_list(smiles, method)
+            input_names_list = input_smiles_list
             if names:
-                names_list = names.split(",")
+                input_names_list = get_input_list(names, method)
+
             assert isinstance(data, list)
-            assert len(data) == len(smiles_list)
+            assert len(data) == len(input_smiles_list)
             for i, entry in enumerate(data):
-                assert entry["molecule_smiles"] == smiles_list[i]
-                assert entry["name"] == names_list[i]
+                assert entry["molecule_smiles"] == input_smiles_list[i]
+                assert entry["name"] == input_names_list[i]
                 scaffold_data = entry["scaffolds"]
                 if scaffold_data is not None:
                     validate_scaffold_data(scaffold_data, assert_not_processed)
@@ -285,4 +410,105 @@ class TestGetAssociatedScaffoldsOrdered:
         smiles = "Cn1cc(C2=C(c3cn(C4CCN(Cc5ccccn5)CC4)c4ccccc34)C(=O)NC2=O)c2ccccc21"  # has 5 ring systems
         self.run_test(
             test_client, url_prefix, smiles, max_rings=3, assert_not_processed=True
+        )
+
+    def test_get_associated_scaffolds_ordered_single_smiles_post(
+        self, test_client, url_prefix
+    ):
+        smiles = ["CN1C(=O)N(C)C(=O)C(N(C)C=N2)=C12"]
+        self.run_test(test_client, url_prefix, smiles, method="POST")
+
+    def test_get_associated_scaffolds_ordered_multiple_smiles_post(
+        self, test_client, url_prefix
+    ):
+        smiles = [
+            "CN1C(=O)N(C)C(=O)C(N(C)C=N2)=C12",
+            "COc1cc2c(ccnc2cc1)C(O)C4CC(CC3)C(C=C)CN34",
+            "CC1(C)SC2C(NC(=O)Cc3ccccc3)C(=O)N2C1C(=O)O",
+        ]
+        self.run_test(test_client, url_prefix, smiles, method="POST")
+
+    def test_get_associated_scaffolds_ordered_no_smiles_post(
+        self, test_client, url_prefix
+    ):
+        smiles = []
+        self.run_test(test_client, url_prefix, smiles, status_code=400, method="POST")
+
+    def test_get_associated_scaffolds_ordered_with_invalid_smiles_post(
+        self, test_client, url_prefix
+    ):
+        smiles = ["CN1C(=O)N(C)C(=O)C(N(C)C=N2)=C12", "adadadss"]
+        self.run_test(test_client, url_prefix, smiles, method="POST")
+
+    def test_get_associated_scaffolds_ordered_missing_smiles_post(
+        self, test_client, url_prefix
+    ):
+        self.run_test(test_client, url_prefix, status_code=400, method="POST")
+
+    def test_get_associated_scaffolds_ordered_database_parameter_post(
+        self, test_client, url_prefix
+    ):
+        """Test with explicit database parameter via POST."""
+        smiles = ["CN1C(=O)N(C)C(=O)C(N(C)C=N2)=C12"]
+        self.run_test(
+            test_client, url_prefix, smiles, database="badapple_classic", method="POST"
+        )
+
+    def test_get_associated_scaffolds_ordered_max_rings_parameter_post(
+        self, test_client, url_prefix
+    ):
+        """Test with explicit max_rings parameter via POST."""
+        smiles = [
+            "Cn1cc(C2=C(c3cn(C4CCN(Cc5ccccn5)CC4)c4ccccc34)C(=O)NC2=O)c2ccccc21"
+        ]  # has 5 ring systems
+        self.run_test(
+            test_client,
+            url_prefix,
+            smiles,
+            max_rings=3,
+            assert_not_processed=True,
+            method="POST",
+        )
+
+    def test_get_associated_scaffolds_ordered_with_names_post(
+        self, test_client, url_prefix
+    ):
+        """Test POST with both SMILES and custom names."""
+        smiles = [
+            "CN1C(=O)N(C)C(=O)C(N(C)C=N2)=C12",
+            "COc1cc2c(ccnc2cc1)C(O)C4CC(CC3)C(C=C)CN34",
+        ]
+        names = ["caffeine", "quinine"]
+        self.run_test(test_client, url_prefix, smiles, names=names, method="POST")
+
+    def test_get_associated_scaffolds_ordered_large_batch_post(
+        self, test_client, url_prefix
+    ):
+        """Test POST with a large number of SMILES (the main benefit of POST)."""
+        # Create a large batch of SMILES that would be unwieldy in a GET request
+        base_smiles = "CN1C(=O)N(C)C(=O)C(N(C)C=N2)=C12"
+        large_smiles_list = [base_smiles] * 50  # 50 identical SMILES
+        # Generate corresponding names
+        names = [f"compound_{i}" for i in range(50)]
+        self.run_test(
+            test_client, url_prefix, large_smiles_list, names=names, method="POST"
+        )
+
+    def test_get_associated_scaffolds_ordered_all_parameters_post(
+        self, test_client, url_prefix
+    ):
+        """Test POST with all parameters set."""
+        smiles = [
+            "CN1C(=O)N(C)C(=O)C(N(C)C=N2)=C12",
+            "COc1cc2c(ccnc2cc1)C(O)C4CC(CC3)C(C=C)CN34",
+        ]
+        names = ["caffeine", "quinine"]
+        self.run_test(
+            test_client,
+            url_prefix,
+            smiles,
+            names=names,
+            max_rings=5,
+            database="badapple_classic",
+            method="POST",
         )
