@@ -40,6 +40,8 @@ for db in databases:
     DB_NAME2PORT[db["name"]] = db["port"]
     ALLOWED_DB_NAMES.append(db["name"])
 
+DEFAULT_DB = environ.get("DB2_NAME")
+
 
 # API limits
 # limits on max rings

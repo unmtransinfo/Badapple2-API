@@ -7,7 +7,12 @@ Functions related to parsing requests.
 
 from typing import Union
 
-from config import ALLOWED_DB_NAMES, MAX_RING_LOWER_BOUND, MAX_RING_UPPER_BOUND
+from config import (
+    ALLOWED_DB_NAMES,
+    DEFAULT_DB,
+    MAX_RING_LOWER_BOUND,
+    MAX_RING_UPPER_BOUND,
+)
 from flask import abort
 
 
@@ -44,10 +49,9 @@ def get_max_rings(request, default_val: int = 10):
 
 def get_database(
     request,
-    default_val: str = ALLOWED_DB_NAMES[0],
+    default_val: str = DEFAULT_DB,
     allowed_db_names: list[str] = ALLOWED_DB_NAMES,
 ):
-    # ALLOWED_DB_NAMES[0] == "badapple_classic"
     database = request.args.get("database", type=str) or default_val
     if database not in allowed_db_names:
         db_names = ",".join(allowed_db_names)
