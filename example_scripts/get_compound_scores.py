@@ -112,6 +112,10 @@ def main(args):
     names_col_name = cpd_df.columns[args.name_column]
 
     n_compound_total = len(cpd_df)
+    if n_compound_total > 10_000 and not (using_localhost):
+        raise ValueError(
+            f"Input file had {n_compound_total} > 10,000 compounds. If processing this many compounds please use locally-installed version (it will be much faster)! See: https://github.com/unmtransinfo/Badapple2-API?tab=readme-ov-file#setup-local-installation"
+        )
     batches = np.arange(n_compound_total) // batch_size
     with open(args.output_tsv, "w") as output_file:
         out_writer = csv.writer(output_file, delimiter="\t")

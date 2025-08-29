@@ -13,7 +13,7 @@ This script processes an input CSV/TSV file containing compound structures and o
 Example usage:
 
 ```
-python get_compound_scores.py --input_dsv_file data/example_input.tsv --iheader --smiles_column 1 --name_column 0 --output_tsv data/example_output.tsv --local_port 8000 --batch_size 20
+python get_compound_scores.py --input_dsv_file data/example_input.tsv --iheader --smiles_column 1 --name_column 0 --output_tsv data/example_output.tsv --local_port 8000 --batch_size 100
 ```
 
 Output of `python get_compound_scores.py -h`:
