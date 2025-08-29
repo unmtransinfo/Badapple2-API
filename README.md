@@ -4,7 +4,7 @@
 
 API code for Badapple2. The repo also containers docker compose files which can be used to setup the entire project (including DBs, API, and UI).
 
-For moderate use cases (<1,000 compounds / day) one can use the public API:
+For moderate use cases (<10,000 compounds / day) one can use the public API:
 https://chiltepin.health.unm.edu/badapple2/apidocs/
 
 For large input files, local installation is recommended. See [Setup (Local Installation)](#setup-local-installation) below.
