@@ -165,6 +165,15 @@ components:
     TargetType:
       type: string
       description: Target type (most commonly "Protein", but can also include "Gene", "Nucleotide", and "Pathway")
+    AssayFormat:
+      type: string
+      description: BARD assay format
+    AssayType:
+      type: string
+      description: BARD assay type
+    DetectionMethod:
+      type: string
+      description: BARD assay detection method
   parameters:
     MaxRings:
       name: max_rings
@@ -229,9 +238,17 @@ components:
     SubstanceIDParam:
       name: SID
       in: query
+      type: integer
       required: true
       schema:
         $ref: "#/components/schemas/SubstanceID"
+    AssayIDParam:
+      name: AID
+      in: query
+      type: integer
+      required: true
+      schema:
+        $ref: "#/components/schemas/AssayID"
   responses:
     ResponseCode400:
       description: Malformed request error
@@ -718,14 +735,11 @@ paths:
                 aid:
                   $ref: "#/components/schemas/AssayID"
                 assay_format:
-                  type: string
-                  description: BARD assay format
+                  $ref: "#/components/schemas/AssayFormat"
                 assay_type:
-                  type: string
-                  description: BARD assay type
+                  $ref: "#/components/schemas/AssayType"
                 detection_method:
-                  type: string
-                  description: BARD assay detection method
+                  $ref: "#/components/schemas/DetectionMethod"
                 external_id:
                   $ref: "#/components/schemas/TargetExternalID"
                 external_id_type:
@@ -832,5 +846,35 @@ paths:
                 { "aid": 1053197, "outcome": 1 },
                 { "aid": 743445, "outcome": 1 },
               ]
+        400:
+          $ref: "#/components/responses/ResponseCode400"
+  /assay_search/get_BARD_annotations:
+    get:
+      tags:
+        - Assay Search
+      summary: Get BARD annotations for an AssayID within the given database.
+      description: Return BARD annotations for the given AssayID.
+      parameters:
+        - $ref: "#/components/parameters/AssayIDParam"
+        - $ref: "#/components/parameters/Database2"
+      responses:
+        200:
+          description: A JSON object containing BARD annotations. Note that not every assay will have BARD annotations, and that some assays may only have some annotations.
+          schema:
+            type: object
+            properties:
+              assay_format:
+                $ref: "#/components/schemas/AssayFormat"
+              assay_type:
+                $ref: "#/components/schemas/AssayType"
+              detection_method:
+                $ref: "#/components/schemas/DetectionMethod"
+          examples:
+            application/json:
+              {
+                "assay_format": "protein format",
+                "assay_type": "direct enzyme activity assay",
+                "detection_method": "fluorescence intensity",
+              }
         400:
           $ref: "#/components/responses/ResponseCode400"

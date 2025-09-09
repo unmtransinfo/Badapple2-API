@@ -125,6 +125,12 @@ def _build_associated_drugs_query(scafid: int) -> sql.SQL:
     ).format(scafid=sql.Literal(scafid))
 
 
+def _build_BARD_annotations_query(aid: int) -> sql.SQL:
+    return sql.SQL(
+        "SELECT assay_format, assay_type, detection_method FROM aid2descriptors WHERE aid={aid};"
+    ).format(aid=sql.Literal(aid))
+
+
 # function to execute query using db cursor
 def execute_query(query: sql.SQL, cursor) -> List[Dict]:
     """Execute a query and return results."""
@@ -224,3 +230,6 @@ class BadAppleSession:
 
     def get_associated_drugs(self, scafid: int) -> List[Dict]:
         return self._execute_query_builder(_build_associated_drugs_query, scafid)
+
+    def get_BARD_annotations(self, aid: int) -> List[Dict]:
+        return self._execute_query_builder(_build_BARD_annotations_query, aid)

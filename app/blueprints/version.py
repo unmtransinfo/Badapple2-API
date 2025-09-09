@@ -2,6 +2,7 @@
 # This is the master blueprint directory,
 # All new blueprints should be assigned here
 from blueprints import scaffold_search
+from blueprints.assay_search import assay_search
 from blueprints.compound_search import compound_search
 from blueprints.substance_search import substance_search
 from flask import Blueprint
@@ -18,4 +19,5 @@ def register_routes(app, in_production: bool, version_url_prefix: str):
 
     version.register_blueprint(compound_search)
     version.register_blueprint(scaffold_search.scaffold_search)
+    version.register_blueprint(assay_search)
     app.register_blueprint(version)

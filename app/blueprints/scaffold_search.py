@@ -10,6 +10,7 @@ from config import ALLOWED_DB_NAMES
 from database.badapple import BadAppleSession
 from flask import Blueprint, jsonify, request
 from utils.request_processing import get_database, get_required_param, int_check
+from utils.result_processing import process_singleton_list
 
 scaffold_search = Blueprint("scaffold_search", __name__, url_prefix="/scaffold_search")
 TAGS = ["Scaffold Search"]
@@ -21,10 +22,7 @@ def get_scaffold_id():
     db_name = get_database(request)
     with BadAppleSession(db_name) as db_session:
         result = db_session.get_scaffold_id(scaf_smiles)
-    if result and len(result) > 0:
-        result = result[0]["id"]
-    else:
-        result = None
+    result = process_singleton_list(result)["id"]
     return jsonify(result)
 
 
@@ -34,10 +32,7 @@ def get_scaffold_info():
     db_name = get_database(request)
     with BadAppleSession(db_name) as db_session:
         result = db_session.search_scaffold_by_id(scafid)
-    if result and len(result) > 0:
-        result = result[0]
-    else:
-        result = None
+    result = process_singleton_list(result)
     return jsonify(result)
 
 
