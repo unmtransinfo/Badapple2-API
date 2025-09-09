@@ -2,7 +2,7 @@
 
 ![alt text](docs/api_screenshot.png)
 
-API code for Badapple2. The repo also containers docker compose files which can be used to setup the entire project (including DBs, API, and UI).
+API code for [Badapple2](https://github.com/unmtransinfo/Badapple2). The repo also containers docker compose files which can be used to setup the entire project (including DBs, API, and UI).
 
 For moderate use cases (<10,000 compounds / day) one can use the public API:
 https://chiltepin.health.unm.edu/badapple2/apidocs/
