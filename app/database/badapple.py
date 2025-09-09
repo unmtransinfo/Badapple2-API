@@ -94,10 +94,41 @@ ORDER BY aid;
     ).format(scafid=sql.Literal(scafid))
 
 
+def _build_active_assay_details_query(scafid: int) -> sql.SQL:
+    return sql.SQL(
+        """
+SELECT 
+scaf2activeaid.aid,
+target.*,
+a2d.assay_format, a2d.assay_type, a2d.detection_method
+FROM 
+target
+RIGHT JOIN  
+aid2target 
+ON target.target_id = aid2target.target_id
+RIGHT JOIN  
+scaf2activeaid 
+ON aid2target.aid = scaf2activeaid.aid
+RIGHT JOIN
+aid2descriptors a2d
+ON a2d.aid = scaf2activeaid.aid
+WHERE 
+scaf2activeaid.scafid = {scafid}
+ORDER BY aid;
+"""
+    ).format(scafid=sql.Literal(scafid))
+
+
 def _build_associated_drugs_query(scafid: int) -> sql.SQL:
     return sql.SQL(
         "SELECT * FROM drug WHERE drug_id IN (SELECT drug_id FROM scaf2drug WHERE scafid={scafid});"
     ).format(scafid=sql.Literal(scafid))
+
+
+def _build_BARD_annotations_query(aid: int) -> sql.SQL:
+    return sql.SQL(
+        "SELECT assay_format, assay_type, detection_method FROM aid2descriptors WHERE aid={aid};"
+    ).format(aid=sql.Literal(aid))
 
 
 # function to execute query using db cursor
@@ -194,5 +225,11 @@ class BadAppleSession:
     def get_active_targets(self, scafid: int) -> List[Dict]:
         return self._execute_query_builder(_build_active_targets_query, scafid)
 
+    def get_active_assay_details(self, scafid: int) -> List[Dict]:
+        return self._execute_query_builder(_build_active_assay_details_query, scafid)
+
     def get_associated_drugs(self, scafid: int) -> List[Dict]:
         return self._execute_query_builder(_build_associated_drugs_query, scafid)
+
+    def get_BARD_annotations(self, aid: int) -> List[Dict]:
+        return self._execute_query_builder(_build_BARD_annotations_query, aid)

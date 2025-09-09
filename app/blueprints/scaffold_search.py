@@ -10,6 +10,7 @@ from config import ALLOWED_DB_NAMES
 from database.badapple import BadAppleSession
 from flask import Blueprint, jsonify, request
 from utils.request_processing import get_database, get_required_param, int_check
+from utils.result_processing import process_singleton_list
 
 scaffold_search = Blueprint("scaffold_search", __name__, url_prefix="/scaffold_search")
 TAGS = ["Scaffold Search"]
@@ -21,10 +22,7 @@ def get_scaffold_id():
     db_name = get_database(request)
     with BadAppleSession(db_name) as db_session:
         result = db_session.get_scaffold_id(scaf_smiles)
-    if result and len(result) > 0:
-        result = result[0]["id"]
-    else:
-        result = None
+    result = process_singleton_list(result)["id"]
     return jsonify(result)
 
 
@@ -34,10 +32,7 @@ def get_scaffold_info():
     db_name = get_database(request)
     with BadAppleSession(db_name) as db_session:
         result = db_session.search_scaffold_by_id(scafid)
-    if result and len(result) > 0:
-        result = result[0]
-    else:
-        result = None
+    result = process_singleton_list(result)
     return jsonify(result)
 
 
@@ -64,6 +59,18 @@ def include_dev_only_routes():
 
 
 # badapple2+ only
+def _get_processed_result(result: list[dict]) -> list[dict]:
+    # remove null data
+    processed_result = []
+    for d in result:
+        d_processed = {}
+        for key in d:
+            if d[key] is not None:
+                d_processed[key] = d[key]
+        processed_result.append(d_processed)
+    return processed_result
+
+
 @scaffold_search.route("/get_active_targets", methods=["GET"])
 def get_active_targets():
     scafid = int_check(request, "scafid")
@@ -72,13 +79,21 @@ def get_active_targets():
     )
     with BadAppleSession(db_name) as db_session:
         result = db_session.get_active_targets(scafid)
-    processed_result = []
-    for d in result:
-        if d["external_id"] is None:
-            # assay had no target
-            processed_result.append({"aid": d["aid"]})
-        else:
-            processed_result.append(d)
+    processed_result = _get_processed_result(result)
+    return jsonify(processed_result)
+
+
+@scaffold_search.route("/get_active_assay_details", methods=["GET"])
+def get_active_assay_details():
+    # gets same info as get_active_targets, but also includes BARD annotations
+    # slightly slower than get_active_targets so creating separate route
+    scafid = int_check(request, "scafid")
+    db_name = get_database(
+        request, default_val=ALLOWED_DB_NAMES[1], allowed_db_names=[ALLOWED_DB_NAMES[1]]
+    )
+    with BadAppleSession(db_name) as db_session:
+        result = db_session.get_active_assay_details(scafid)
+    processed_result = _get_processed_result(result)
     return jsonify(processed_result)
 
 

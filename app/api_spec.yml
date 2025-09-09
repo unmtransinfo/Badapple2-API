@@ -141,6 +141,39 @@ components:
         inn:
           type: string
           description: International Nonproprietary Name
+    TargetExternalID:
+      type: string
+      description: External ID of target
+    TargetExternalIDType:
+      type: string
+      description: Resource linked to external_id (either "UniProt", "NCBI", or "Other")
+    TargetName:
+      type: integer
+      description: Name of target
+    TargetProteinFamily:
+      type: string
+      description: Protein family information from Pharos (https://pharos.nih.gov/), if available
+    TargetID:
+      type: integer
+      description: Target ID (unique to Badapple database)
+    TargetTaxonomy:
+      type: string
+      description: Target taxon from the NCBI Taxonomy Database
+    TargetTaxonomyID:
+      type: integer
+      description: Taxon ID from the NCBI Taxonomy Database
+    TargetType:
+      type: string
+      description: Target type (most commonly "Protein", but can also include "Gene", "Nucleotide", and "Pathway")
+    AssayFormat:
+      type: string
+      description: BARD assay format
+    AssayType:
+      type: string
+      description: BARD assay type
+    DetectionMethod:
+      type: string
+      description: BARD assay detection method
   parameters:
     MaxRings:
       name: max_rings
@@ -205,9 +238,17 @@ components:
     SubstanceIDParam:
       name: SID
       in: query
+      type: integer
       required: true
       schema:
         $ref: "#/components/schemas/SubstanceID"
+    AssayIDParam:
+      name: AID
+      in: query
+      type: integer
+      required: true
+      schema:
+        $ref: "#/components/schemas/AssayID"
   responses:
     ResponseCode400:
       description: Malformed request error
@@ -617,7 +658,7 @@ paths:
       tags:
         - Scaffold Search
       summary: Get PubChem AssayIDs where scaffold was in active substance(s) along with biological target information.
-      description: Return the PubChem AssayIDs and corresponding biological targets where the given scaffoldID was present in an 'active' substance. Note that not all PubChem assay records have explicit target information.
+      description: Return the PubChem AssayIDs and corresponding biological targets where the given scaffoldID was present in an 'active' substance. Note that not all PubChem assay records have explicit target information. Only non-null information will be reported.
       parameters:
         - $ref: "#/components/parameters/ScaffoldIDParam"
         - $ref: "#/components/parameters/Database2"
@@ -632,50 +673,114 @@ paths:
                 aid:
                   $ref: "#/components/schemas/AssayID"
                 external_id:
-                  type: string
-                  description: External ID of target
+                  $ref: "#/components/schemas/TargetExternalID"
                 external_id_type:
-                  type: string
-                  description: Resource linked to external_id (either "UniProt", "NCBI", or "Other")
+                  $ref: "#/components/schemas/TargetExternalIDType"
                 name:
-                  type: integer
-                  description: Name of target
+                  $ref: "#/components/schemas/TargetName"
                 protein_family:
-                  type: string
-                  description: Protein family information from Pharos (https://pharos.nih.gov/), if available
+                  $ref: "#/components/schemas/TargetProteinFamily"
                 target_id:
-                  type: integer
-                  description: Target ID (unique to Badapple database)
+                  $ref: "#/components/schemas/TargetID"
                 taxonomy:
-                  type: string
-                  description: Target taxon from the NCBI Taxonomy Database
+                  $ref: "#/components/schemas/TargetTaxonomy"
                 taxonomy_id:
-                  type: integer
-                  description: Taxon ID from the NCBI Taxonomy Database
+                  $ref: "#/components/schemas/TargetTaxonomyID"
                 type:
-                  type: string
-                  description: Target type (most commonly "Protein", but can also include "Gene", "Nucleotide", and "Pathway")
+                  $ref: "#/components/schemas/TargetType"
           examples:
             application/json:
               [
                 {
-                  "aid": 651658,
-                  "external_id": "Q9HCT0",
-                  "external_id_type": "UniProt",
-                  "name": "Fibroblast growth factor 22",
-                  "protein_family": null,
-                  "target_id": 482,
+                  "aid": 360,
+                  "external_id": "1Y7V_A",
+                  "external_id_type": "NCBI",
+                  "name": "Chain A, Glucosylceramidase",
+                  "target_id": 1,
                   "taxonomy": "Homo sapiens (human)",
                   "taxonomy_id": 9606,
                   "type": "Protein",
                 },
                 {
-                  "aid": 1053197,
-                  "external_id": "Q9HAT2",
+                  "aid": 504652,
+                  "external_id": "P21728",
                   "external_id_type": "UniProt",
-                  "name": "Sialate O-acetylesterase",
-                  "protein_family": "Enzyme",
-                  "target_id": 543,
+                  "name": "D(1A) dopamine receptor",
+                  "protein_family": "GPCR",
+                  "target_id": 363,
+                  "taxonomy": "Homo sapiens (human)",
+                  "taxonomy_id": 9606,
+                  "type": "Protein",
+                },
+              ]
+        400:
+          $ref: "#/components/responses/ResponseCode400"
+  /scaffold_search/get_active_assay_details:
+    get:
+      tags:
+        - Scaffold Search
+      summary: Get PubChem AssayIDs where scaffold was in active substance(s) along with biological target information + BARD annotations.
+      description: Return the PubChem AssayIDs and corresponding biological targets + BARD annotations where the given scaffoldID was present in an 'active' substance. Note that not all PubChem assay records have explicit target information or BARD annotations. Only non-null information will be reported.
+      parameters:
+        - $ref: "#/components/parameters/ScaffoldIDParam"
+        - $ref: "#/components/parameters/Database2"
+      responses:
+        200:
+          description: A JSON object containing a list of dictionaries. Each dictionary contains the AssayID (aid) and target information + BARD annotations (if available)
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                aid:
+                  $ref: "#/components/schemas/AssayID"
+                assay_format:
+                  $ref: "#/components/schemas/AssayFormat"
+                assay_type:
+                  $ref: "#/components/schemas/AssayType"
+                detection_method:
+                  $ref: "#/components/schemas/DetectionMethod"
+                external_id:
+                  $ref: "#/components/schemas/TargetExternalID"
+                external_id_type:
+                  $ref: "#/components/schemas/TargetExternalIDType"
+                name:
+                  $ref: "#/components/schemas/TargetName"
+                protein_family:
+                  $ref: "#/components/schemas/TargetProteinFamily"
+                target_id:
+                  $ref: "#/components/schemas/TargetID"
+                taxonomy:
+                  $ref: "#/components/schemas/TargetTaxonomy"
+                taxonomy_id:
+                  $ref: "#/components/schemas/TargetTaxonomyID"
+                type:
+                  $ref: "#/components/schemas/TargetType"
+          examples:
+            application/json:
+              [
+                {
+                  "aid": 360,
+                  "assay_format": "protein format",
+                  "assay_type": "direct enzyme activity assay",
+                  "detection_method": "fluorescence intensity",
+                  "external_id": "1Y7V_A",
+                  "external_id_type": "NCBI",
+                  "name": "Chain A, Glucosylceramidase",
+                  "target_id": 1,
+                  "taxonomy": "Homo sapiens (human)",
+                  "taxonomy_id": 9606,
+                  "type": "Protein",
+                },
+                {
+                  "aid": 504652,
+                  "assay_format": "cell-based format",
+                  "assay_type": "protein-small molecule interaction assay",
+                  "external_id": "P21728",
+                  "external_id_type": "UniProt",
+                  "name": "D(1A) dopamine receptor",
+                  "protein_family": "GPCR",
+                  "target_id": 363,
                   "taxonomy": "Homo sapiens (human)",
                   "taxonomy_id": 9606,
                   "type": "Protein",
@@ -741,5 +846,35 @@ paths:
                 { "aid": 1053197, "outcome": 1 },
                 { "aid": 743445, "outcome": 1 },
               ]
+        400:
+          $ref: "#/components/responses/ResponseCode400"
+  /assay_search/get_BARD_annotations:
+    get:
+      tags:
+        - Assay Search
+      summary: Get BARD annotations for an AssayID within the given database.
+      description: Return BARD annotations for the given AssayID.
+      parameters:
+        - $ref: "#/components/parameters/AssayIDParam"
+        - $ref: "#/components/parameters/Database2"
+      responses:
+        200:
+          description: A JSON object containing BARD annotations. Note that not every assay will have BARD annotations, and that some assays may only have some annotations.
+          schema:
+            type: object
+            properties:
+              assay_format:
+                $ref: "#/components/schemas/AssayFormat"
+              assay_type:
+                $ref: "#/components/schemas/AssayType"
+              detection_method:
+                $ref: "#/components/schemas/DetectionMethod"
+          examples:
+            application/json:
+              {
+                "assay_format": "protein format",
+                "assay_type": "direct enzyme activity assay",
+                "detection_method": "fluorescence intensity",
+              }
         400:
           $ref: "#/components/responses/ResponseCode400"

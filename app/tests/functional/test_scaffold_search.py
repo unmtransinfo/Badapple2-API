@@ -9,6 +9,7 @@ Verifying that the DBs themselves are "accurate" is part of the DB construction.
 
 import pytest
 from tests.helpers import (
+    validate_active_assay_details_keys,
     validate_compound_keys,
     validate_drug_keys,
     validate_scaffold_keys,
@@ -181,6 +182,7 @@ class TestGetActiveTargets(ScaffoldSearchTestBase):
         if not id_in_db:
             assert len(data) == 0
         for target_info in data:
+            assert isinstance(target_info, dict)
             assert "aid" in target_info
             # not all assays have target information
             if "target_id" in target_info:
@@ -193,6 +195,38 @@ class TestGetActiveTargets(ScaffoldSearchTestBase):
         self.run_test(test_client, url_prefix, scafid=scafid, database="badapple2")
 
     def test_get_active_targets_bad_database_parameter(self, test_client, url_prefix):
+        scafid = 1
+        self.run_test(
+            test_client,
+            url_prefix,
+            scafid=scafid,
+            database="badapple_classic",
+            status_code=400,
+        )
+
+
+class TestGetActiveAssayDetails(ScaffoldSearchTestBase):
+    """Functional tests for get_active_assay_details endpoint."""
+
+    endpoint = "get_active_assay_details"
+
+    def validate_response(self, data, id_in_db):
+        """Validate active assay details response."""
+        assert isinstance(data, list)
+        if not id_in_db:
+            assert len(data) == 0
+        for d in data:
+            assert isinstance(d, dict)
+            assert "aid" in d
+            validate_active_assay_details_keys(d)
+
+    def test_get_active_assay_details_database_parameter(self, test_client, url_prefix):
+        scafid = 1
+        self.run_test(test_client, url_prefix, scafid=scafid, database="badapple2")
+
+    def test_get_active_assay_details_bad_database_parameter(
+        self, test_client, url_prefix
+    ):
         scafid = 1
         self.run_test(
             test_client,
