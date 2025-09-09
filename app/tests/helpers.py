@@ -7,7 +7,13 @@ Helper functions for tests
 
 
 def validate_keys(d: dict, expected_keys: list):
+    # returned value should contain all expected_keys
     assert set(expected_keys).issubset(d.keys())
+
+
+def validate_keys_subset(d: dict, expected_keys: list):
+    # return value should contain only subset of expected_keys (applies when we remove null entries)
+    assert set(d.keys()).issubset(expected_keys)
 
 
 def validate_scaffold_keys(d: dict):
@@ -51,8 +57,9 @@ def validate_compound_keys(d: dict):
     validate_keys(d, expected_keys)
 
 
-def validate_target_keys(d: dict):
-    expected_keys = [
+def _get_target_keys():
+    return [
+        "aid",
         "target_id",
         "type",
         "external_id",
@@ -62,7 +69,17 @@ def validate_target_keys(d: dict):
         "taxonomy_id",
         "protein_family",
     ]
-    validate_keys(d, expected_keys)
+
+
+def validate_target_keys(d: dict):
+    expected_keys = _get_target_keys()
+    validate_keys_subset(d, expected_keys)
+
+
+def validate_active_assay_details_keys(d: dict):
+    expected_keys = _get_target_keys()
+    expected_keys = expected_keys + ["assay_format", "assay_type", "detection_method"]
+    validate_keys_subset(d, expected_keys)
 
 
 def validate_drug_keys(d: dict):

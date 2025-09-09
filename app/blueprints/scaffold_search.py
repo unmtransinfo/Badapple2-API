@@ -64,6 +64,18 @@ def include_dev_only_routes():
 
 
 # badapple2+ only
+def _get_processed_result(result: list[dict]) -> list[dict]:
+    # remove null data
+    processed_result = []
+    for d in result:
+        d_processed = {}
+        for key in d:
+            if d[key] is not None:
+                d_processed[key] = d[key]
+        processed_result.append(d_processed)
+    return processed_result
+
+
 @scaffold_search.route("/get_active_targets", methods=["GET"])
 def get_active_targets():
     scafid = int_check(request, "scafid")
@@ -72,13 +84,21 @@ def get_active_targets():
     )
     with BadAppleSession(db_name) as db_session:
         result = db_session.get_active_targets(scafid)
-    processed_result = []
-    for d in result:
-        if d["external_id"] is None:
-            # assay had no target
-            processed_result.append({"aid": d["aid"]})
-        else:
-            processed_result.append(d)
+    processed_result = _get_processed_result(result)
+    return jsonify(processed_result)
+
+
+@scaffold_search.route("/get_active_assay_details", methods=["GET"])
+def get_active_assay_details():
+    # gets same info as get_active_targets, but also includes BARD annotations
+    # slightly slower than get_active_targets so creating separate route
+    scafid = int_check(request, "scafid")
+    db_name = get_database(
+        request, default_val=ALLOWED_DB_NAMES[1], allowed_db_names=[ALLOWED_DB_NAMES[1]]
+    )
+    with BadAppleSession(db_name) as db_session:
+        result = db_session.get_active_assay_details(scafid)
+    processed_result = _get_processed_result(result)
     return jsonify(processed_result)
 
 
