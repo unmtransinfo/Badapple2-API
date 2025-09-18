@@ -29,6 +29,10 @@ The steps below will install the databases (badapple_classic + badapple2), API, 
    - badapple_classic: `psql -d badapple_classic -p 5432 -U toad -h localhost` (password: "road")
    - badapple2: `psql -d badapple2 -p 5433 -U frog -h localhost` (password: "lilyPad")
 
+### Benchmark (Local Installation)
+
+On a laptop computer without parallelization the `compound_search/get_associated_scaffolds_ordered` endpoint processed all 2,474,590 ChEMBL (version 35) compounds in 5.75 hours, processing roughly 120 compounds/second. YMMV depending on your system specs, how you setup gunicorn (`n_workers`) + use of parallelization, as well as your input dataset (compounds with more ring systems take more time to process). See the [benchmark/](benchmark/) directory for more info.
+
 ## Documentation
 
 The `/apidocs/` page will provide you with detailed information on every API call available. Note that the local version includes some functions not available on the production server.
