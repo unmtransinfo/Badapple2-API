@@ -1,0 +1,3 @@
+CPU: 13th Gen Intel(R) Core(TM) i7-1360P
+Cores: 16
+Memory: 31.033 GB
