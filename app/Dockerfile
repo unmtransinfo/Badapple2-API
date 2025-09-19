@@ -12,6 +12,8 @@ COPY . .
 RUN mkdir -p flasgger_static && \
     cp -r /usr/local/lib/python3.12/site-packages/flasgger/ui3/static/* flasgger_static
 
-# can be overridden by docker compose
+# ENV vars can be overridden by docker compose / .env file
 ENV APP_PORT=8000
-CMD echo "RUNTIME: APP_PORT is set to ${APP_PORT}" && gunicorn --bind "0.0.0.0:${APP_PORT}" --reload app:app
+ENV N_WORKERS=3
+ENV MAX_REQUESTS=1000
+CMD echo "RUNTIME: APP_PORT=${APP_PORT}, N_WORKERS=${N_WORKERS}, MAX_REQUESTS=${MAX_REQUESTS}" && gunicorn --bind "0.0.0.0:${APP_PORT}" --workers ${N_WORKERS} --max-requests ${MAX_REQUESTS} --reload app:app
