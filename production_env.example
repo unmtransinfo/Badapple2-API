@@ -31,6 +31,7 @@ MAX_CONTENT_LENGTH=1048576 # 1MB - limits size of POST requests
 VITE_API_FETCH_SCAFFOLDS_URL=https://${APP_URL}/api/v1/compound_search/get_associated_scaffolds_ordered
 VITE_API_FETCH_DRUGS_URL=https://${APP_URL}/api/v1/scaffold_search/get_associated_drugs
 VITE_API_FETCH_ACTIVE_ASSAYS_URL=https://${APP_URL}/api/v1/scaffold_search/get_active_assay_details
+VITE_ASSET_ROOT=/${URL_PREFIX}
 VITE_DB_NAME=${DB_NAME}
 VITE_DB2_NAME=${DB2_NAME}
 
