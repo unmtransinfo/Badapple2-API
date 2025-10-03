@@ -19,7 +19,7 @@ For large input files, local installation is recommended. See [Setup (Local Inst
 The steps below will install the databases (badapple_classic + badapple2), API, and UI on your system.
 
 1. Install docker engine: https://docs.docker.com/engine/install/
-2. (Optional) modify `local.env`
+2. (Optional) modify [local.env](local.env)
    - If you want to include activity outcomes ("activity" table), you will need to change `DB_PGDUMP_URL` to "https://unmtid-dbs.net/download/Badapple2/badapple_classic_full.pgdump" and `DB2_PGDUMP_URL` to "https://unmtid-dbs.net/download/Badapple2/badapple2_full.pgdump"
    - Note that if you do not include activity outcomes then you will be unable to use the `substance_search/get_assay_outcomes` API call.
 3. Run `docker compose -f compose-local.yml --env-file local.env up --build -d`
@@ -72,10 +72,10 @@ Additional examples can be seen in the [example_scripts/](example_scripts/) subd
 ## Setup (Development)
 
 1. Install the badapple_classic and badapple2 DBs by following the instructions [here](https://github.com/unmtransinfo/Badapple2/blob/main/README.md)
-2. Copy `.env.example` to `.env` (in the `/app` folder)
+2. Copy [.env.example](app/.env.example) to `.env` (in the `/app` folder): `cp .env.example .env`
 3. Edit the `.env` credentials as needed
-4. Run `docker-compose --env-file ./app/.env -f compose-development.yml up --build`
-   - Note: Depending on your version of docker, you may instead want to use: `docker compose --env-file ./app/.env -f compose-development.yml up --build`
+4. Run `docker compose --env-file ./app/.env -f compose-development.yml up --build`
+   - Note: Depending on your version of docker, you may instead want to use: `docker-compose --env-file ./app/.env -f compose-development.yml up --build`
 5. The API should now be accessible from `localhost:8000`
    - A full set of Swagger documentation can be found at http://localhost:8000/apidocs
 
@@ -99,7 +99,7 @@ _Note_: If you need to update the Python version, make sure to adjust the steps 
 
 ## Setup (Production on Chiltepin)
 
-1. Copy `production_env.example` to `.env`
+1. Copy [production_env.example](production_env.example) to `.env`: `cp production_env.example .env`
 2. Fill in/edit the `.env` credentials as needed
 3. Update apache2 config:
    - Create a new file for apache2 config: `/etc/apache2/sites-available/badapple2api.conf`
