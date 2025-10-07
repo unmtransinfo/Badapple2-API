@@ -33,7 +33,7 @@ services:
       retries: 5
     networks:
       - badapple_network
-  
+
   badapple2_db:
     restart: always
     build:
@@ -97,6 +97,7 @@ services:
       - badapple_network
 
   badapple_ui:
+    restart: always
     build:
       context: https://github.com/unmtransinfo/Badapple2-UI.git#main
     environment:
