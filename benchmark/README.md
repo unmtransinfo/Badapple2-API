@@ -25,4 +25,4 @@ Cores: 16
 Memory: 31.033 GB
 ```
 
-The API was used to processes the 2,474,590 ChEMBL compounds with a single worker (no parallelization). The total time to process the compounds was `5h:34m:29s` (see [results/results.txt](results/results.txt)). Thus the API processed (approximately) 120 compounds per second on average.
+The API was used to processes the 2,474,590 ChEMBL compounds on this system. The total time to process the compounds was `5h:34m:29s` (see [results/results.txt](results/results.txt)). Thus the API processed (approximately) 120 compounds per second on average.
