@@ -57,7 +57,7 @@ MAX_LIST_LENGTH = 1000
 PROD_ONLY_ADDL_DESCRIPTION = """
 \n\n
 Note: This API is intended for moderate use cases and does not include all the functions available on the locally hosted version (e.g., searching for specific assay outcomes). 
-    One can setup the API locally by following the instructions here: https://github.com/unmtransinfo/Badapple2-API/blob/main/README.md#setup-development
+    One can setup the API locally by following the instructions here: https://github.com/unmtransinfo/Badapple2-API/tree/main?tab=readme-ov-file#setup-local-installation
 """
 
 # these API calls are only available on localhost
