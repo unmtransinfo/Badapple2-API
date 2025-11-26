@@ -113,6 +113,12 @@ _Note_: If you need to update the Python version, make sure to adjust the steps 
 4. (If server was previously up): `docker-compose -f compose-production.yml down`
 5. Run `docker-compose -f compose-production.yml up --build -d`
 
+If you only need to update a single service (e.g., the UI) you don't need to do a full restart (with `down` + `up`). Instead, you can use this approach:
+
+1. Run `docker-compose -f compose-production.yml build badapple_ui`
+2. Then `docker-compose -f compose-production.yml up badapple_ui`
+3. (Recommended) Restart nginx: `docker-compose -f compose-production.yml restart badapple_nginx`
+
 ### Production notes
 
 - If you are noticing some UI changes not showing up you may need to clear your browser cache
