@@ -167,7 +167,7 @@ urllib3==2.6.3
     # via requests
 useful-rdkit-utils==0.89
     # via -r requirements.in
-werkzeug==3.1.4
+werkzeug==3.1.5
     # via
     #   flask
     #   flask-cors
