@@ -89,7 +89,7 @@ pandas==2.3.1
     #   -r requirements.in
     #   seaborn
     #   useful-rdkit-utils
-pillow==11.3.0
+pillow==12.1.1
     # via
     #   matplotlib
     #   rdkit
