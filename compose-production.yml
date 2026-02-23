@@ -12,8 +12,6 @@ services:
         - PGDUMP_URL=${DB_PGDUMP_URL}
         - TZ=${TZ}
     container_name: badapple_classic_db
-    ports:
-      - "127.0.0.1:${DB_PORT}:${DB_PORT}" # 127.0.0.1 to restrict to localhost
     environment:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
@@ -32,7 +30,7 @@ services:
       retries: 5
     networks:
       - badapple_backend
-  
+
   badapple2_db:
     restart: always
     build:
@@ -46,8 +44,6 @@ services:
         - PGDUMP_URL=${DB2_PGDUMP_URL}
         - TZ=${TZ}
     container_name: badapple2_db
-    ports:
-      - "127.0.0.1:${DB2_PORT}:${DB2_PORT}" # 127.0.0.1 to restrict to localhost
     environment:
       - DB_NAME=${DB2_NAME}
       - DB_USER=${DB2_USER}
