@@ -13,7 +13,7 @@ services:
         - PGDUMP_URL=${DB_PGDUMP_URL}
         - TZ=${TZ}
     container_name: badapple_classic_db
-    ports:
+    ports: # exposing DB ports here for easier DB-access from localhost
       - "127.0.0.1:${DB_PORT}:${DB_PORT}"
     environment:
       - DB_NAME=${DB_NAME}
@@ -47,7 +47,7 @@ services:
         - PGDUMP_URL=${DB2_PGDUMP_URL}
         - TZ=${TZ}
     container_name: badapple2_db
-    ports:
+    ports: # exposing DB ports here for easier DB-access from localhost
       - "127.0.0.1:${DB2_PORT}:${DB2_PORT}"
     environment:
       - DB_NAME=${DB2_NAME}
