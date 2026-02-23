@@ -116,3 +116,4 @@ volumes:
 
 networks:
   badapple_network:
+    driver: bridge

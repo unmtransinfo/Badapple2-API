@@ -133,4 +133,6 @@ volumes:
 
 networks:
   badapple_frontend:
+    driver: bridge
   badapple_backend:
+    driver: bridge
