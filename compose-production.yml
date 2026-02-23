@@ -1,6 +1,6 @@
 services:
   badapple_db:
-    restart: always
+    restart: unless-stopped
     build:
       context: https://github.com/unmtransinfo/Badapple2.git#main
       dockerfile: Dockerfile
@@ -32,7 +32,7 @@ services:
       - badapple_backend
 
   badapple2_db:
-    restart: always
+    restart: unless-stopped
     build:
       context: https://github.com/unmtransinfo/Badapple2.git#main
       dockerfile: Dockerfile
@@ -64,7 +64,7 @@ services:
       - badapple_backend
 
   badapple_api:
-    restart: always
+    restart: unless-stopped
     build:
       context: ./app
     environment:
@@ -106,7 +106,7 @@ services:
       - badapple_frontend
 
   badapple_nginx:
-    restart: always
+    restart: unless-stopped
     image: nginx:1
     volumes:
       - static_files_badapple:/usr/share/nginx/html/static_files_badapple:ro

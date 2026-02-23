@@ -1,7 +1,7 @@
 # TODO: can simplify db setup once have docker images created on hub
 services:
   badapple_db:
-    restart: always
+    restart: unless-stopped
     build:
       context: https://github.com/unmtransinfo/Badapple2.git#main
       dockerfile: Dockerfile
@@ -35,7 +35,7 @@ services:
       - badapple_network
 
   badapple2_db:
-    restart: always
+    restart: unless-stopped
     build:
       context: https://github.com/unmtransinfo/Badapple2.git#main
       dockerfile: Dockerfile
@@ -69,7 +69,7 @@ services:
       - badapple_network
 
   badapple_api:
-    restart: always
+    restart: unless-stopped
     build:
       context: ./app
     ports:
@@ -97,7 +97,7 @@ services:
       - badapple_network
 
   badapple_ui:
-    restart: always
+    restart: unless-stopped
     build:
       context: https://github.com/unmtransinfo/Badapple2-UI.git#main
     environment:
