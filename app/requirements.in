@@ -10,4 +10,6 @@ pandas
 psycopg2-binary
 gunicorn
 pytest
+# black and pre-commit are just for formatting code
+black
 pre-commit
