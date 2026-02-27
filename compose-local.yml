@@ -1,4 +1,5 @@
 # TODO: can simplify db setup once have docker images created on hub
+name: badapple2-local
 services:
   badapple_db:
     build:
@@ -118,4 +119,3 @@ networks:
 volumes:
   badapple_classic_data:
   badapple2_data:
-
