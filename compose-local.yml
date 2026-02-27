@@ -1,7 +1,7 @@
 # TODO: can simplify db setup once have docker images created on hub
 name: badapple2-local
 services:
-  badapple_db:
+  db:
     build:
       context: https://github.com/unmtransinfo/Badapple2.git#main
       dockerfile: Dockerfile
@@ -36,7 +36,7 @@ services:
       timeout: 5s
       retries: 5
 
-  badapple2_db:
+  db2:
     build:
       context: https://github.com/unmtransinfo/Badapple2.git#main
       dockerfile: Dockerfile
@@ -47,7 +47,7 @@ services:
         - DB_PASSWORD=${DB2_PASSWORD}
         - PGDUMP_URL=${DB2_PGDUMP_URL}
         - TZ=${TZ}
-    container_name: badapple2_db
+    container_name: db2
     volumes:
       - badapple2_data:/var/lib/postgresql/14/main
     environment:
@@ -71,22 +71,22 @@ services:
       timeout: 5s
       retries: 5
 
-  badapple_api:
+  api:
     build:
       context: ./app
     depends_on:
-      badapple_db:
+      db:
         condition: service_healthy
-      badapple2_db:
+      db2:
         condition: service_healthy
     environment:
       - APP_PORT=${APP_PORT}
-      - DB_HOST=badapple_db
+      - DB_HOST=db
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_PORT=${DB_PORT}
-      - DB2_HOST=badapple2_db
+      - DB2_HOST=db2
       - DB2_NAME=${DB2_NAME}
       - DB2_USER=${DB2_USER}
       - DB2_PASSWORD=${DB2_PASSWORD}
@@ -99,7 +99,7 @@ services:
       - badapple_network
     restart: unless-stopped
 
-  badapple_ui:
+  ui:
     build:
       context: https://github.com/unmtransinfo/Badapple2-UI.git#main
     environment:
