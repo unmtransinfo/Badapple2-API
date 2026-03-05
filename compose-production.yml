@@ -1,6 +1,8 @@
+# dclint disable no-unbound-port-interfaces
+# nginx intentionally binds all interfaces; Apache on the host proxies to it
+name: badapple2-prod
 services:
-  badapple_db:
-    restart: always
+  db:
     build:
       context: https://github.com/unmtransinfo/Badapple2.git#main
       dockerfile: Dockerfile
@@ -12,8 +14,8 @@ services:
         - PGDUMP_URL=${DB_PGDUMP_URL}
         - TZ=${TZ}
     container_name: badapple_classic_db
-    ports:
-      - "127.0.0.1:${DB_PORT}:${DB_PORT}" # 127.0.0.1 to restrict to localhost
+    volumes:
+      - badapple_classic_data:/var/lib/postgresql/14/main
     environment:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
@@ -23,18 +25,16 @@ services:
       - TZ=${TZ}
     env_file:
       - .env
-    volumes:
-      - badapple_classic_data:/var/lib/postgresql/14/main
+    networks:
+      - backend
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d ${DB_NAME} -p ${DB_PORT}"]
+      test: [ "CMD-SHELL", "pg_isready -d ${DB_NAME} -p ${DB_PORT}" ]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - badapple_backend
-  
-  badapple2_db:
-    restart: always
+
+  db2:
     build:
       context: https://github.com/unmtransinfo/Badapple2.git#main
       dockerfile: Dockerfile
@@ -46,8 +46,8 @@ services:
         - PGDUMP_URL=${DB2_PGDUMP_URL}
         - TZ=${TZ}
     container_name: badapple2_db
-    ports:
-      - "127.0.0.1:${DB2_PORT}:${DB2_PORT}" # 127.0.0.1 to restrict to localhost
+    volumes:
+      - badapple2_data:/var/lib/postgresql/14/main
     environment:
       - DB_NAME=${DB2_NAME}
       - DB_USER=${DB2_USER}
@@ -57,20 +57,25 @@ services:
       - TZ=${TZ}
     env_file:
       - .env
-    volumes:
-      - badapple2_data:/var/lib/postgresql/14/main
+    networks:
+      - backend
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d ${DB2_NAME} -p ${DB2_PORT}"]
+      test: [ "CMD-SHELL", "pg_isready -d ${DB2_NAME} -p ${DB2_PORT}" ]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - badapple_backend
 
-  badapple_api:
-    restart: always
+  api:
     build:
       context: ./app
+    depends_on:
+      db:
+        condition: service_healthy
+      db2:
+        condition: service_healthy
+    volumes:
+      - static_files_flasgger:/app/flasgger_static/
     environment:
       - APP_PORT=${APP_PORT}
       - DB_HOST=badapple_db # host is docker service
@@ -85,48 +90,47 @@ services:
       - DB2_PORT=${DB2_PORT}
     env_file:
       - .env
-    depends_on:
-      badapple_db:
-        condition: service_healthy
-      badapple2_db:
-        condition: service_healthy
-    volumes:
-      - static_files_flasgger:/app/flasgger_static/
     networks:
-      - badapple_backend
-      - badapple_frontend
+      - backend
+      - frontend
+    restart: unless-stopped
 
-  badapple_ui:
+  ui:
     build:
       context: https://github.com/unmtransinfo/Badapple2-UI.git#main
+    volumes:
+      - static_files_badapple:/app/dist/
     environment:
       - NODE_OPTIONS=--openssl-legacy-provider
     env_file:
       - .env
-    command: npx vite build
-    volumes:
-      - static_files_badapple:/app/dist/
     networks:
-      - badapple_frontend
+      - frontend
+    command: npx vite build
 
-  badapple_nginx:
-    restart: always
+  nginx:
     image: nginx:1
+    depends_on:
+      api:
+        condition: service_started
+      ui:
+        condition: service_completed_successfully
     volumes:
       - static_files_badapple:/usr/share/nginx/html/static_files_badapple:ro
       - static_files_flasgger:/usr/share/nginx/html/static_files_flasgger:ro
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - nginx:/etc/nginx
     ports:
-      - "${BADAPPLE_NGINX_SSL_PORT:-443}:443"
       - "${BADAPPLE_NGINX_HTTP_PORT:-80}:80"
-    depends_on:
-      badapple_api:
-        condition: service_started
-      badapple_ui:
-        condition: service_completed_successfully
+      - "${BADAPPLE_NGINX_SSL_PORT:-443}:443"
     networks:
-      - badapple_frontend
+      - frontend
+    restart: unless-stopped
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
 
 volumes:
   badapple_classic_data:
@@ -134,7 +138,3 @@ volumes:
   static_files_badapple:
   static_files_flasgger:
   nginx:
-
-networks:
-  badapple_frontend:
-  badapple_backend:

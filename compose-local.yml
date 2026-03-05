@@ -1,7 +1,7 @@
 # TODO: can simplify db setup once have docker images created on hub
+name: badapple2-local
 services:
-  badapple_db:
-    restart: always
+  db:
     build:
       context: https://github.com/unmtransinfo/Badapple2.git#main
       dockerfile: Dockerfile
@@ -13,8 +13,8 @@ services:
         - PGDUMP_URL=${DB_PGDUMP_URL}
         - TZ=${TZ}
     container_name: badapple_classic_db
-    ports:
-      - "127.0.0.1:${DB_PORT}:${DB_PORT}"
+    volumes:
+      - badapple_classic_data:/var/lib/postgresql/14/main
     environment:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
@@ -24,18 +24,19 @@ services:
       - TZ=${TZ}
     env_file:
       - local.env
-    volumes:
-      - badapple_classic_data:/var/lib/postgresql/14/main
+    ports:
+      # exposing DB ports here for easier DB-access from localhost
+      - "127.0.0.1:${DB_PORT}:${DB_PORT}"
+    networks:
+      - badapple_network
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d ${DB_NAME} -p ${DB_PORT}"]
+      test: [ "CMD-SHELL", "pg_isready -d ${DB_NAME} -p ${DB_PORT}" ]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - badapple_network
 
-  badapple2_db:
-    restart: always
+  db2:
     build:
       context: https://github.com/unmtransinfo/Badapple2.git#main
       dockerfile: Dockerfile
@@ -46,9 +47,9 @@ services:
         - DB_PASSWORD=${DB2_PASSWORD}
         - PGDUMP_URL=${DB2_PGDUMP_URL}
         - TZ=${TZ}
-    container_name: badapple2_db
-    ports:
-      - "127.0.0.1:${DB2_PORT}:${DB2_PORT}"
+    container_name: db2
+    volumes:
+      - badapple2_data:/var/lib/postgresql/14/main
     environment:
       - DB_NAME=${DB2_NAME}
       - DB_USER=${DB2_USER}
@@ -58,46 +59,47 @@ services:
       - TZ=${TZ}
     env_file:
       - local.env
-    volumes:
-      - badapple2_data:/var/lib/postgresql/14/main
+    ports:
+      # exposing DB ports here for easier DB-access from localhost
+      - "127.0.0.1:${DB2_PORT}:${DB2_PORT}"
+    networks:
+      - badapple_network
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d ${DB2_NAME} -p ${DB2_PORT}"]
+      test: [ "CMD-SHELL", "pg_isready -d ${DB2_NAME} -p ${DB2_PORT}" ]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - badapple_network
 
-  badapple_api:
-    restart: always
+  api:
     build:
       context: ./app
-    ports:
-      - "127.0.0.1:${APP_PORT}:${APP_PORT}"
+    depends_on:
+      db:
+        condition: service_healthy
+      db2:
+        condition: service_healthy
     environment:
       - APP_PORT=${APP_PORT}
-      - DB_HOST=badapple_db
+      - DB_HOST=db
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_PORT=${DB_PORT}
-      - DB2_HOST=badapple2_db
+      - DB2_HOST=db2
       - DB2_NAME=${DB2_NAME}
       - DB2_USER=${DB2_USER}
       - DB2_PASSWORD=${DB2_PASSWORD}
       - DB2_PORT=${DB2_PORT}
     env_file:
       - local.env
-    depends_on:
-      badapple_db:
-        condition: service_healthy
-      badapple2_db:
-        condition: service_healthy
+    ports:
+      - "127.0.0.1:${APP_PORT}:${APP_PORT}"
     networks:
       - badapple_network
+    restart: unless-stopped
 
-  badapple_ui:
-    restart: always
+  ui:
     build:
       context: https://github.com/unmtransinfo/Badapple2-UI.git#main
     environment:
@@ -106,13 +108,14 @@ services:
       - local.env
     ports:
       - "127.0.0.1:${UI_PORT}:8080"
-    command: npx vite --port 8080
     networks:
       - badapple_network
+    command: npx vite --port 8080
+    restart: unless-stopped
+networks:
+  badapple_network:
+    driver: bridge
 
 volumes:
   badapple_classic_data:
   badapple2_data:
-
-networks:
-  badapple_network:

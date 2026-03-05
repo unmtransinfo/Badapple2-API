@@ -97,6 +97,37 @@ If one finds they need to update dependencies (`requirements.txt`), the followin
 
 _Note_: If you need to update the Python version, make sure to adjust the steps above accordingly and to update the Python image in `Dockerfile`.
 
+#### Code Formatting with Pre-commit Hooks
+
+This project uses [pre-commit](https://pre-commit.com/) hooks to automatically format Python code with [Black](https://black.readthedocs.io/) and formats/checks Docker Compose files with [DCLint](https://github.com/zavoloklom/docker-compose-linter/tree/main) before each commit.
+
+**Setup (one-time):**
+
+1. Setup and activate a Python (v3.14) virtual environment if you haven't already:
+
+   ```bash
+   conda create -n badapple2-api python=3.12 && conda activate badapple2-api
+   ```
+
+2. Install dependencies:
+
+   ```bash
+   pip install -r app/requirements.txt
+   ```
+
+3. Install the pre-commit hooks:
+   ```bash
+   pre-commit install
+   ```
+
+**Running hooks manually:**
+
+You can run all pre-commit hooks manually without committing:
+
+```bash
+pre-commit run --all-files
+```
+
 ## Setup (Production on Chiltepin)
 
 1. Copy [production_env.example](production_env.example) to `.env`: `cp production_env.example .env`

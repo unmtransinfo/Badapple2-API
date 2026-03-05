@@ -1,15 +1,16 @@
-services: 
-  web: 
+name: badapple2-api-dev
+services:
+  web:
     build:
       context: app
       dockerfile: Dockerfile
-    env_file: 
-      - ./app/.env
     environment:
       - APP_PORT=${APP_PORT}
-    ports: 
-      - '${APP_PORT}:${APP_PORT}'
-    network_mode: "host" 
+    env_file:
+      - ./app/.env
+    ports:
+      - "127.0.0.1:${APP_PORT}:${APP_PORT}"
+    network_mode: "host"
+
 # WARNING: ONLY USE network_mode: "host"  IN DEVELOPMENT!
 # Using here as database is on "localhost" - avoids having to setup networking on local machine
-# Eventually will host database on a proper server
