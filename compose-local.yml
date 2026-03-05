@@ -144,13 +144,16 @@ services:
     networks:
       - badapple_network
     restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", 'python -c "import urllib.request; urllib.request.urlopen(''http://localhost:${APP_PORT}/health'')"' ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   ui:
     image: unmtransinfo/badapple2_ui:latest
     depends_on:
-      db:
-        condition: service_healthy
-      db2:
+      api:
         condition: service_healthy
     env_file:
       - local.env
