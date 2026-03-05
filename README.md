@@ -20,14 +20,14 @@ The steps below will install the databases (badapple_classic + badapple2), API, 
 
 1. Install docker engine: https://docs.docker.com/engine/install/
 2. (Optional) modify [local.env](local.env)
-   - If you want to include activity outcomes ("activity" table), you will need to change `DB_PGDUMP_URL` to "https://unmtid-dbs.net/download/Badapple2/badapple_classic_full.pgdump" and `DB2_PGDUMP_URL` to "https://unmtid-dbs.net/download/Badapple2/badapple2_full.pgdump"
+   - If you want to include activity outcomes ("activity" table), you will need to change `DB_IMAGE_TAG` to "badapple_classic-full" and `DB2_IMAGE_TAG` to "badapple2-full".
    - Note that if you do not include activity outcomes then you will be unable to use the `substance_search/get_assay_outcomes` API call.
 3. Run `docker compose -f compose-local.yml --env-file local.env up --build -d`
 4. The DBs, API, and UI will be accessible as follows:
    - UI: http://localhost:8080/badapple2/
    - API: http://localhost:8000/apidocs/
-   - badapple_classic: `psql -d badapple_classic -p 5432 -U toad -h localhost` (password: "road")
-   - badapple2: `psql -d badapple2 -p 5433 -U frog -h localhost` (password: "lilyPad")
+   - badapple_classic: `psql -d badapple_classic -p 5433 -U toad -h localhost` (password: "road")
+   - badapple2: `psql -d badapple2 -p 5434 -U frog -h localhost` (password: "lilyPad")
 
 ### Benchmark (Local Installation)
 

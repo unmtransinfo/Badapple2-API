@@ -1,75 +1,122 @@
-# TODO: can simplify db setup once have docker images created on hub
 name: badapple2-local
 services:
   db:
-    build:
-      context: https://github.com/unmtransinfo/Badapple2.git#main
-      dockerfile: Dockerfile
-      args:
-        - DB_PORT=${DB_PORT}
-        - DB_NAME=${DB_NAME}
-        - DB_USER=${DB_USER}
-        - DB_PASSWORD=${DB_PASSWORD}
-        - PGDUMP_URL=${DB_PGDUMP_URL}
-        - TZ=${TZ}
-    container_name: badapple_classic_db
+    image: unmtransinfo/badapple:${DB_IMAGE_TAG}
     volumes:
-      - badapple_classic_data:/var/lib/postgresql/14/main
+      - badapple_classic_data:/var/lib/postgresql/data
     environment:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_PORT=${DB_PORT}
-      - PGDUMP_URL=${DB_PGDUMP_URL}
-      - TZ=${TZ}
+      - POSTGRES_USER=${DB_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${DB_POSTGRES_PASSWORD}
     env_file:
       - local.env
     ports:
-      # exposing DB ports here for easier DB-access from localhost
-      - "127.0.0.1:${DB_PORT}:${DB_PORT}"
+      - "127.0.0.1:${DB_PORT}:5432"
     networks:
       - badapple_network
-    restart: unless-stopped
+    command:
+      - postgres
+      - -c
+      - max_connections=${PG_MAX_CONNECTIONS}
+      - -c
+      - shared_buffers=${PG_SHARED_BUFFERS}
+      - -c
+      - effective_cache_size=${PG_EFFECTIVE_CACHE_SIZE}
+      - -c
+      - maintenance_work_mem=${PG_MAINTENANCE_WORK_MEM}
+      - -c
+      - checkpoint_completion_target=${PG_CHECKPOINT_COMPLETION_TARGET}
+      - -c
+      - wal_buffers=${PG_WAL_BUFFERS}
+      - -c
+      - default_statistics_target=${PG_DEFAULT_STATISTICS_TARGET}
+      - -c
+      - random_page_cost=${PG_RANDOM_PAGE_COST}
+      - -c
+      - effective_io_concurrency=${PG_EFFECTIVE_IO_CONCURRENCY}
+      - -c
+      - work_mem=${PG_WORK_MEM}
+      - -c
+      - huge_pages=${PG_HUGE_PAGES}
+      - -c
+      - min_wal_size=${PG_MIN_WAL_SIZE}
+      - -c
+      - max_wal_size=${PG_MAX_WAL_SIZE}
+      - -c
+      - max_worker_processes=${PG_MAX_WORKER_PROCESSES}
+      - -c
+      - max_parallel_workers_per_gather=${PG_MAX_PARALLEL_WORKERS_PER_GATHER}
+      - -c
+      - max_parallel_workers=${PG_MAX_PARALLEL_WORKERS}
+      - -c
+      - max_parallel_maintenance_workers=${PG_MAX_PARALLEL_MAINTENANCE_WORKERS}
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -d ${DB_NAME} -p ${DB_PORT}" ]
-      interval: 10s
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME} && test -f /var/lib/postgresql/restore_complete" ]
+      interval: 60s
       timeout: 5s
-      retries: 5
+      retries: 60
 
   db2:
-    build:
-      context: https://github.com/unmtransinfo/Badapple2.git#main
-      dockerfile: Dockerfile
-      args:
-        - DB_PORT=${DB2_PORT}
-        - DB_NAME=${DB2_NAME}
-        - DB_USER=${DB2_USER}
-        - DB_PASSWORD=${DB2_PASSWORD}
-        - PGDUMP_URL=${DB2_PGDUMP_URL}
-        - TZ=${TZ}
-    container_name: db2
+    image: unmtransinfo/badapple:${DB2_IMAGE_TAG}
     volumes:
-      - badapple2_data:/var/lib/postgresql/14/main
+      - badapple2_data:/var/lib/postgresql/data
     environment:
       - DB_NAME=${DB2_NAME}
       - DB_USER=${DB2_USER}
       - DB_PASSWORD=${DB2_PASSWORD}
       - DB_PORT=${DB2_PORT}
-      - PGDUMP_URL=${DB2_PGDUMP_URL}
-      - TZ=${TZ}
+      - POSTGRES_USER=${DB2_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${DB2_POSTGRES_PASSWORD}
     env_file:
       - local.env
     ports:
-      # exposing DB ports here for easier DB-access from localhost
-      - "127.0.0.1:${DB2_PORT}:${DB2_PORT}"
+      - "127.0.0.1:${DB2_PORT}:5432"
     networks:
       - badapple_network
-    restart: unless-stopped
+    command:
+      - postgres
+      - -c
+      - max_connections=${PG_MAX_CONNECTIONS}
+      - -c
+      - shared_buffers=${PG_SHARED_BUFFERS}
+      - -c
+      - effective_cache_size=${PG_EFFECTIVE_CACHE_SIZE}
+      - -c
+      - maintenance_work_mem=${PG_MAINTENANCE_WORK_MEM}
+      - -c
+      - checkpoint_completion_target=${PG_CHECKPOINT_COMPLETION_TARGET}
+      - -c
+      - wal_buffers=${PG_WAL_BUFFERS}
+      - -c
+      - default_statistics_target=${PG_DEFAULT_STATISTICS_TARGET}
+      - -c
+      - random_page_cost=${PG_RANDOM_PAGE_COST}
+      - -c
+      - effective_io_concurrency=${PG_EFFECTIVE_IO_CONCURRENCY}
+      - -c
+      - work_mem=${PG_WORK_MEM}
+      - -c
+      - huge_pages=${PG_HUGE_PAGES}
+      - -c
+      - min_wal_size=${PG_MIN_WAL_SIZE}
+      - -c
+      - max_wal_size=${PG_MAX_WAL_SIZE}
+      - -c
+      - max_worker_processes=${PG_MAX_WORKER_PROCESSES}
+      - -c
+      - max_parallel_workers_per_gather=${PG_MAX_PARALLEL_WORKERS_PER_GATHER}
+      - -c
+      - max_parallel_workers=${PG_MAX_PARALLEL_WORKERS}
+      - -c
+      - max_parallel_maintenance_workers=${PG_MAX_PARALLEL_MAINTENANCE_WORKERS}
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -d ${DB2_NAME} -p ${DB2_PORT}" ]
-      interval: 10s
+      test: [ "CMD-SHELL", "pg_isready -U ${DB2_USER} -d ${DB2_NAME} && test -f /var/lib/postgresql/restore_complete" ]
+      interval: 60s
       timeout: 5s
-      retries: 5
+      retries: 60
 
   api:
     build:
@@ -85,12 +132,12 @@ services:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
-      - DB_PORT=${DB_PORT}
+      - DB_PORT=5432
       - DB2_HOST=db2
       - DB2_NAME=${DB2_NAME}
       - DB2_USER=${DB2_USER}
       - DB2_PASSWORD=${DB2_PASSWORD}
-      - DB2_PORT=${DB2_PORT}
+      - DB2_PORT=5432 # uses internal network, so port 5432 works
     env_file:
       - local.env
     ports:
@@ -102,8 +149,11 @@ services:
   ui:
     build:
       context: https://github.com/unmtransinfo/Badapple2-UI.git#main
-    environment:
-      - NODE_OPTIONS=--openssl-legacy-provider
+    depends_on:
+      db:
+        condition: service_healthy
+      db2:
+        condition: service_healthy
     env_file:
       - local.env
     ports:
@@ -112,6 +162,7 @@ services:
       - badapple_network
     command: npx vite --port 8080
     restart: unless-stopped
+
 networks:
   badapple_network:
     driver: bridge
