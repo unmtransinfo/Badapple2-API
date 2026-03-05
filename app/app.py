@@ -1,4 +1,5 @@
 import yaml
+from blueprints.health import health_bp
 from blueprints.version import register_routes
 from config import DEV_ONLY_PATHS, PROD_ONLY_ADDL_DESCRIPTION
 from dotenv import load_dotenv
@@ -74,6 +75,7 @@ def create_app():
     # setup swagger and register routes
     swagger = Swagger(app, config=swagger_config, template=swagger_template)
     register_routes(app, IN_PROD, VERSION_URL_PREFIX)
+    app.register_blueprint(health_bp)
     return app
 
 
