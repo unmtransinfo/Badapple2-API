@@ -119,8 +119,7 @@ services:
       retries: 60
 
   api:
-    build:
-      context: ./app
+    image: unmtransinfo/badapple2_api:latest
     depends_on:
       db:
         condition: service_healthy
@@ -147,8 +146,7 @@ services:
     restart: unless-stopped
 
   ui:
-    build:
-      context: https://github.com/unmtransinfo/Badapple2-UI.git#main
+    image: unmtransinfo/badapple2_ui:latest
     depends_on:
       db:
         condition: service_healthy
