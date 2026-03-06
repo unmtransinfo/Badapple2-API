@@ -59,6 +59,11 @@ services:
       interval: 60s
       timeout: 5s
       retries: 60
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: 8G
 
   db2:
     image: unmtransinfo/badapple:badapple2
@@ -117,6 +122,11 @@ services:
       interval: 60s
       timeout: 5s
       retries: 60
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: 8G
 
   api:
     image: unmtransinfo/badapple2_api:latest
@@ -150,6 +160,11 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "3" # providing one per gunicorn worker given computational expense of HierS
+          memory: 2G
 
   ui:
     image: unmtransinfo/badapple2_ui:latest
@@ -184,6 +199,12 @@ services:
     networks:
       - frontend
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1GB # highly unlikely to hit these limits, mainly just to protect against rogue processes
+
 networks:
   frontend:
     driver: bridge
