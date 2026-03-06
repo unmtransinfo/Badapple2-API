@@ -3,7 +3,7 @@
 name: badapple2-prod
 services:
   db:
-    image: unmtransinfo/badapple:${DB_IMAGE_TAG}
+    image: unmtransinfo/badapple:badapple_classic
     container_name: badapple_classic_db
     volumes:
       - badapple_classic_data:/var/lib/postgresql/data
@@ -61,7 +61,7 @@ services:
       retries: 60
 
   db2:
-    image: unmtransinfo/badapple:${DB2_IMAGE_TAG}
+    image: unmtransinfo/badapple:badapple2
     container_name: badapple2_db
     volumes:
       - badapple2_data:/var/lib/postgresql/data
