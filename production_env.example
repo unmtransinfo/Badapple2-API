@@ -5,7 +5,6 @@ DB_NAME=badapple_classic
 DB_USER=
 DB_PASSWORD=
 DB_PORT=
-DB_PGDUMP_URL="https://unmtid-dbs.net/download/Badapple2/badapple_classic.pgdump"
 
 # specs for badapple2
 # NOTE: DB2_PORT should be different than DB_PORT
@@ -13,7 +12,6 @@ DB2_NAME=badapple2
 DB2_USER=
 DB2_PASSWORD=
 DB2_PORT=
-DB2_PGDUMP_URL="https://unmtid-dbs.net/download/Badapple2/badapple2.pgdump"
 
 # timezone (same for all DBs)
 TZ=America/Denver
@@ -41,3 +39,23 @@ VITE_DB2_NAME=${DB2_NAME}
 # for gunicorn
 N_WORKERS=3
 MAX_REQUESTS=1000 # unlikely that you'd need to change this
+
+# Postgres tuning settings - you may want to modify these depending on your setup
+# Based on: https://pgtune.leopard.in.ua/?dbVersion=16&osType=linux&dbType=web&cpuNum=4&totalMemory=8&totalMemoryUnit=GB&connectionNum=100&hdType=ssd
+PG_MAX_CONNECTIONS=100
+PG_SHARED_BUFFERS=2GB
+PG_EFFECTIVE_CACHE_SIZE=6GB
+PG_MAINTENANCE_WORK_MEM=512MB
+PG_CHECKPOINT_COMPLETION_TARGET=0.9
+PG_WAL_BUFFERS=16MB
+PG_DEFAULT_STATISTICS_TARGET=100
+PG_RANDOM_PAGE_COST=1.1
+PG_EFFECTIVE_IO_CONCURRENCY=200
+PG_WORK_MEM=20164kB
+PG_HUGE_PAGES=off
+PG_MIN_WAL_SIZE=1GB
+PG_MAX_WAL_SIZE=4GB
+PG_MAX_WORKER_PROCESSES=4
+PG_MAX_PARALLEL_WORKERS_PER_GATHER=2
+PG_MAX_PARALLEL_WORKERS=4
+PG_MAX_PARALLEL_MAINTENANCE_WORKERS=2
