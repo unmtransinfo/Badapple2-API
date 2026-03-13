@@ -132,7 +132,7 @@ services:
       db2:
         condition: service_healthy
     volumes:
-      - /var/www/html/badapple2/flasgger_static:/app/flasgger_static/
+      - /var/www/badapple2/flasgger_static:/app/flasgger_static/
     environment:
       - APP_PORT=${APP_PORT}
       - DB_HOST=db
@@ -170,7 +170,7 @@ services:
       api:
         condition: service_healthy
     volumes:
-      - /var/www/html/badapple2:/app/dist/
+      - /var/www/badapple2:/app/dist/
     environment:
       - NODE_OPTIONS=--openssl-legacy-provider
     env_file:
