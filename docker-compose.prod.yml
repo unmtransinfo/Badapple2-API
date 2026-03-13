@@ -131,8 +131,6 @@ services:
         condition: service_healthy
       db2:
         condition: service_healthy
-    volumes:
-      - /var/www/badapple2/flasgger_static:/app/flasgger_static/
     environment:
       - APP_PORT=${APP_PORT}
       - DB_HOST=db
