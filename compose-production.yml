@@ -175,6 +175,7 @@ services:
     env_file:
       - .env
     command: npx vite build
+    restart: no
 
 networks:
   backend:
