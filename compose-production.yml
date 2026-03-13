@@ -11,7 +11,6 @@ services:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
-      - DB_PORT=${DB_PORT}
       - POSTGRES_USER=${DB_POSTGRES_USER}
       - POSTGRES_PASSWORD=${DB_POSTGRES_PASSWORD}
     env_file:
@@ -74,7 +73,6 @@ services:
       - DB_NAME=${DB2_NAME}
       - DB_USER=${DB2_USER}
       - DB_PASSWORD=${DB2_PASSWORD}
-      - DB_PORT=${DB2_PORT}
       - POSTGRES_USER=${DB2_POSTGRES_USER}
       - POSTGRES_PASSWORD=${DB2_POSTGRES_PASSWORD}
     env_file:
