@@ -13,19 +13,14 @@ DB2_PASSWORD=
 # timezone (same for all DBs)
 TZ=America/Denver
 
-# you will need to edit the apache config with the SSL port here
-BADAPPLE_NGINX_SSL_PORT=
-BADAPPLE_NGINX_HTTP_PORT=
 APP_NAME=Badapple2-API
-# make sure nginx.conf uses this APP_PORT
-# (line: proxy_pass http://badapple_api:8001/)
+# make sure apache config proxies to this port (e.g. ProxyPass /badapple2/ http://localhost:8001/)
 APP_PORT=8001
 URL_PREFIX=badapple2
 APP_URL=chiltepin.health.unm.edu/${URL_PREFIX}
 MAX_CONTENT_LENGTH=1048576 # 1MB - limits size of POST requests
 
 # for UI
-UI_PORT=8080
 VITE_API_FETCH_SCAFFOLDS_URL=https://${APP_URL}/api/v1/compound_search/get_associated_scaffolds_ordered
 VITE_API_FETCH_DRUGS_URL=https://${APP_URL}/api/v1/scaffold_search/get_associated_drugs
 VITE_API_FETCH_ACTIVE_ASSAYS_URL=https://${APP_URL}/api/v1/scaffold_search/get_active_assay_details
