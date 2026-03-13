@@ -14,7 +14,7 @@ services:
     env_file:
       - .env
     networks:
-      - badapple_network
+      - backend
     command:
       - postgres
       - -c
@@ -76,7 +76,7 @@ services:
     env_file:
       - .env
     networks:
-      - badapple_network
+      - backend
     command:
       - postgres
       - -c
