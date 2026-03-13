@@ -54,7 +54,7 @@ services:
       - -c
       - max_parallel_maintenance_workers=${PG_MAX_PARALLEL_MAINTENANCE_WORKERS}
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME} && test -f /var/lib/postgresql/restore_complete" ]
+      test: [ "CMD-SHELL", "psql -U ${DB_USER} -d ${DB_NAME} -c 'SELECT 1 FROM scaffold LIMIT 1;'" ]
       interval: 60s
       timeout: 5s
       retries: 60
@@ -113,7 +113,7 @@ services:
       - -c
       - max_parallel_maintenance_workers=${PG_MAX_PARALLEL_MAINTENANCE_WORKERS}
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB2_USER} -d ${DB2_NAME} && test -f /var/lib/postgresql/restore_complete" ]
+      test: [ "CMD-SHELL", "psql -U ${DB2_USER} -d ${DB2_NAME} -c 'SELECT 1 FROM scaffold LIMIT 1;'" ]
       interval: 60s
       timeout: 5s
       retries: 60
@@ -143,6 +143,7 @@ services:
       - "127.0.0.1:${APP_PORT}:${APP_PORT}"
     networks:
       - badapple_network
+    command: gunicorn --bind "0.0.0.0:${APP_PORT}" --workers ${N_WORKERS} --max-requests ${MAX_REQUESTS} --reload app:app
     restart: unless-stopped
     healthcheck:
       test: [ "CMD-SHELL", 'python -c "import urllib.request; urllib.request.urlopen(''http://localhost:${APP_PORT}/health'')"' ]
