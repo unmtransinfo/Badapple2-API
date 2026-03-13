@@ -11,6 +11,8 @@ DB_POSTGRES_PASSWORD=
 DB2_NAME=badapple2
 DB2_USER=
 DB2_PASSWORD=
+DB2_POSTGRES_USER=
+DB2_POSTGRES_PASSWORD=
 
 # timezone (same for all DBs)
 TZ=America/Denver
@@ -22,8 +24,7 @@ URL_PREFIX=badapple2
 SERVER_NAME=chiltepin.health.unm.edu
 APP_URL=${SERVER_NAME}/${URL_PREFIX}
 MAX_CONTENT_LENGTH=1048576 # 1MB - limits size of POST requests
-DB2_POSTGRES_USER=
-DB2_POSTGRES_PASSWORD=
+
 
 # for UI
 VITE_API_FETCH_SCAFFOLDS_URL=https://${APP_URL}/api/v1/compound_search/get_associated_scaffolds_ordered
