@@ -22,7 +22,7 @@ The steps below will install the databases (badapple_classic + badapple2), API, 
 2. (Optional) modify [local.env](local.env)
    - If you want to include activity outcomes ("activity" table), you will need to change `DB_IMAGE_TAG` to "badapple_classic-full" and `DB2_IMAGE_TAG` to "badapple2-full".
    - Note that if you do not include activity outcomes then you will be unable to use the `substance_search/get_assay_outcomes` API call.
-3. Run `docker compose -f compose-local.yml --env-file local.env up --build -d`
+3. Run `docker compose -f docker-compose.local.yml --env-file local.env up --build -d`
 4. The DBs, API, and UI will be accessible as follows:
    - UI: http://localhost:8080/badapple2/
    - API: http://localhost:8000/apidocs/
@@ -74,8 +74,8 @@ Additional examples can be seen in the [example_scripts/](example_scripts/) subd
 1. Install the badapple_classic and badapple2 DBs by following the instructions [here](https://github.com/unmtransinfo/Badapple2/blob/main/README.md)
 2. Copy [.env.example](app/.env.example) to `.env` (in the `/app` folder): `cp .env.example .env`
 3. Edit the `.env` credentials as needed
-4. Run `docker compose --env-file ./app/.env -f compose-development.yml up --build`
-   - Note: Depending on your version of docker, you may instead want to use: `docker-compose --env-file ./app/.env -f compose-development.yml up --build`
+4. Run `docker compose --env-file ./app/.env -f docker-compose.dev.yml up --build`
+   - Note: Depending on your version of docker, you may instead want to use: `docker-compose --env-file ./app/.env -f docker-compose.dev.yml up --build`
 5. The API should now be accessible from `localhost:8000`
    - A full set of Swagger documentation can be found at http://localhost:8000/apidocs
 
@@ -130,25 +130,38 @@ pre-commit run --all-files
 
 ## Setup (Production on Chiltepin)
 
-1. Copy [production_env.example](production_env.example) to `.env`: `cp production_env.example .env`
-2. Fill in/edit the `.env` credentials as needed
-3. Update apache2 config:
-   - Create a new file for apache2 config: `/etc/apache2/sites-available/badapple2api.conf`
-   - Add the following line to `/etc/apache2/apache2.conf`:
-     ```
-     Include /etc/apache2/sites-available/badapple2api.conf
-     ```
-   - Update the apache2 virtual config file: `/etc/apache2/sites-enabled/000-default.conf`
-   - Run config check: `sudo apachectl configtest`
-   - (If config check passed) reload apache: `sudo systemctl reload apache2`
-4. (If server was previously up): `docker-compose -f compose-production.yml down`
-5. Run `docker-compose -f compose-production.yml up --build -d`
+1. **Pull latest changes (for compose file mainly):**
 
-If you only need to update a single service (e.g., the UI) you don't need to do a full restart (with `down` + `up`). Instead, you can use this approach:
+```bash
+git pull
+```
 
-1. Run `docker-compose -f compose-production.yml build badapple_ui`
-2. Then `docker-compose -f compose-production.yml up badapple_ui`
-3. (Recommended) Restart nginx: `docker-compose -f compose-production.yml restart badapple_nginx`
+2. **Copy [.env.prod.example](.env.prod.example) to `.env`**:
+
+```bash
+cp .env.prod.example .env
+```
+
+2. **Modify `.env`**
+3. **(If services previously up):**
+
+   ```bash
+   docker compose -f docker-compose.prod.yml down
+   ```
+
+4. **Pull latest images and run:**
+
+   ```bash
+   docker compose -f docker-compose.prod.yml pull
+   docker compose -f docker-compose.prod.yml up -d --remove-orphans
+   ```
+
+5. **Verify deployment:**
+
+   ```bash
+   docker compose -f docker-compose.prod.yml ps
+   docker compose -f docker-compose.prod.yml logs api
+   ```
 
 ### Production notes
 
