@@ -1,5 +1,3 @@
-# dclint disable no-unbound-port-interfaces
-# nginx intentionally binds all interfaces; Apache on the host proxies to it
 name: badapple2-prod
 services:
   db:
@@ -134,7 +132,7 @@ services:
       db2:
         condition: service_healthy
     volumes:
-      - static_files_flasgger:/app/flasgger_static/
+      - /var/www/html/badapple2/flasgger_static:/app/flasgger_static/
     environment:
       - APP_PORT=${APP_PORT}
       - DB_HOST=db
@@ -149,9 +147,10 @@ services:
       - DB2_PORT=5432 # uses internal network, so port 5432 works
     env_file:
       - .env
+    ports:
+      - "127.0.0.1:${APP_PORT}:${APP_PORT}"
     networks:
       - backend
-      - frontend
     restart: unless-stopped
     healthcheck:
       test: [ "CMD-SHELL", 'python -c "import urllib.request; urllib.request.urlopen(''http://localhost:${APP_PORT}/health'')"' ]
@@ -170,48 +169,17 @@ services:
       api:
         condition: service_healthy
     volumes:
-      - static_files_badapple:/app/dist/
+      - /var/www/html/badapple2:/app/dist/
     environment:
       - NODE_OPTIONS=--openssl-legacy-provider
     env_file:
       - .env
-    networks:
-      - frontend
     command: npx vite build
 
-  nginx:
-    image: nginx:1
-    depends_on:
-      api:
-        condition: service_started
-      ui:
-        condition: service_completed_successfully
-    volumes:
-      - static_files_badapple:/usr/share/nginx/html/static_files_badapple:ro
-      - static_files_flasgger:/usr/share/nginx/html/static_files_flasgger:ro
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - nginx:/etc/nginx
-    ports:
-      - "${BADAPPLE_NGINX_HTTP_PORT:-80}:80"
-      - "${BADAPPLE_NGINX_SSL_PORT:-443}:443"
-    networks:
-      - frontend
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: "1"
-          memory: 1GB # highly unlikely to hit these limits, mainly just to protect against rogue processes
-
 networks:
-  frontend:
-    driver: bridge
   backend:
     driver: bridge
 
 volumes:
   badapple_classic_data:
   badapple2_data:
-  static_files_badapple:
-  static_files_flasgger:
-  nginx:
