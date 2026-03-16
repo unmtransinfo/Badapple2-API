@@ -142,28 +142,29 @@ git pull
 cp .env.prod.example .env
 ```
 
-2. **Modify `.env`**
-3. **(If significant changes to compose file):**
+3. **Modify `.env`**
+
+4. **(If significant changes to compose file):**
 
    ```bash
    docker compose -f docker-compose.prod.yml down
    ```
 
-4. **Pull latest images and run:**
+5. **Pull latest images and run:**
 
    ```bash
    docker compose -f docker-compose.prod.yml pull
    docker compose -f docker-compose.prod.yml up -d --remove-orphans
    ```
 
-5. **Verify deployment:**
+6. **Verify deployment:**
 
    ```bash
    docker compose -f docker-compose.prod.yml ps
    docker compose -f docker-compose.prod.yml logs api
    ```
 
-6. **(One-time setup) If not done so already, modify your /etc/apache2/sites-available/ files to include the following lines**
+7. **(One-time setup) If not done so already, modify your /etc/apache2/sites-available/ files to include the following lines**
 
 ```
    # badapple2
