@@ -163,6 +163,42 @@ cp .env.prod.example .env
    docker compose -f docker-compose.prod.yml logs api
    ```
 
+6. **(One-time setup) If not done so already, modify your /etc/apache2/sites-available/ files to include the following lines**
+
+```
+   # badapple2
+   ProxyPass /badapple2/api http://localhost:<APP_PORT>/api
+   ProxyPassReverse /badapple2/api http://localhost:<APP_PORT>/api
+   ProxyPass /badapple2/apidocs/ http://localhost:<APP_PORT>/apidocs/
+   ProxyPassReverse /badapple2/apidocs/ http://localhost:<APP_PORT>/apidocs/
+   ProxyPass /badapple2/flasgger_static/ http://localhost:<APP_PORT>/badapple2/flasgger_static/
+   ProxyPassReverse /badapple2/flasgger_static/ http://localhost:<APP_PORT>/badapple2/flasgger_static/
+
+   # Static directory aliases (e.g., SPA UI builds)
+   # badapple2
+   Alias /badapple2 /var/www/badapple2/
+
+    <Directory /var/www/badapple2/>
+        Options -Indexes +FollowSymLinks
+        AllowOverride None
+        Require all granted
+
+        # SPA fallback: if the file/dir doesn't exist, serve index.html
+        RewriteEngine On
+        RewriteCond %{REQUEST_FILENAME} !-f
+        RewriteCond %{REQUEST_FILENAME} !-d
+        RewriteRule ^ index.html [L]
+   </Directory>
+```
+
+Then reload apache:
+
+```bash
+sudo apache2ctl configtest # make sure syntax ok
+sudo systemctl reload apache2
+curl -I https://chiltepin.health.unm.edu/badapple2/apidocs/ # should give HTTP/1.1 200
+```
+
 ## Acknowledgment
 
 Originally forked from the CFChemAPI repo:
