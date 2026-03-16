@@ -143,7 +143,7 @@ cp .env.prod.example .env
 ```
 
 2. **Modify `.env`**
-3. **(If services previously up):**
+3. **(If significant changes to compose file):**
 
    ```bash
    docker compose -f docker-compose.prod.yml down
