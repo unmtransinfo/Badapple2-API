@@ -160,7 +160,7 @@ services:
       resources:
         limits:
           cpus: "3" # providing one per gunicorn worker given computational expense of HierS
-          memory: 2G
+          memory: 4G
 
   ui:
     image: unmtransinfo/badapple2_ui:latest
