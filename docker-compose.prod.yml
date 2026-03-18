@@ -1,22 +1,20 @@
-name: badapple2-local
+name: badapple2-prod
 services:
   db:
-    image: unmtransinfo/badapple:${DB_IMAGE_TAG}
+    image: unmtransinfo/badapple:badapple_classic
+    container_name: badapple_classic_db
     volumes:
       - badapple_classic_data:/var/lib/postgresql/data
     environment:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
-      - DB_PORT=${DB_PORT}
       - POSTGRES_USER=${DB_POSTGRES_USER}
       - POSTGRES_PASSWORD=${DB_POSTGRES_PASSWORD}
     env_file:
-      - local.env
-    ports:
-      - "127.0.0.1:${DB_PORT}:5432"
+      - .env
     networks:
-      - badapple_network
+      - backend
     command:
       - postgres
       - -c
@@ -54,28 +52,31 @@ services:
       - -c
       - max_parallel_maintenance_workers=${PG_MAX_PARALLEL_MAINTENANCE_WORKERS}
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME} && test -f /var/lib/postgresql/restore_complete" ]
+      test: [ "CMD-SHELL", "psql -U ${DB_USER} -d ${DB_NAME} -c 'SELECT 1 FROM scaffold LIMIT 1;'" ]
       interval: 60s
       timeout: 5s
       retries: 60
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: 8G
 
   db2:
-    image: unmtransinfo/badapple:${DB2_IMAGE_TAG}
+    image: unmtransinfo/badapple:badapple2
+    container_name: badapple2_db
     volumes:
       - badapple2_data:/var/lib/postgresql/data
     environment:
       - DB_NAME=${DB2_NAME}
       - DB_USER=${DB2_USER}
       - DB_PASSWORD=${DB2_PASSWORD}
-      - DB_PORT=${DB2_PORT}
       - POSTGRES_USER=${DB2_POSTGRES_USER}
       - POSTGRES_PASSWORD=${DB2_POSTGRES_PASSWORD}
     env_file:
-      - local.env
-    ports:
-      - "127.0.0.1:${DB2_PORT}:5432"
+      - .env
     networks:
-      - badapple_network
+      - backend
     command:
       - postgres
       - -c
@@ -113,10 +114,15 @@ services:
       - -c
       - max_parallel_maintenance_workers=${PG_MAX_PARALLEL_MAINTENANCE_WORKERS}
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB2_USER} -d ${DB2_NAME} && test -f /var/lib/postgresql/restore_complete" ]
+      test: [ "CMD-SHELL", "psql -U ${DB2_USER} -d ${DB2_NAME} -c 'SELECT 1 FROM scaffold LIMIT 1;'" ]
       interval: 60s
       timeout: 5s
       retries: 60
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: 8G
 
   api:
     image: unmtransinfo/badapple2_api:latest
@@ -138,34 +144,38 @@ services:
       - DB2_PASSWORD=${DB2_PASSWORD}
       - DB2_PORT=5432 # uses internal network, so port 5432 works
     env_file:
-      - local.env
+      - .env
     ports:
       - "127.0.0.1:${APP_PORT}:${APP_PORT}"
     networks:
-      - badapple_network
+      - backend
+    command: gunicorn --bind "0.0.0.0:${APP_PORT}" --workers ${N_WORKERS} --max-requests ${MAX_REQUESTS} --preload app:app
     restart: unless-stopped
     healthcheck:
       test: [ "CMD-SHELL", 'python -c "import urllib.request; urllib.request.urlopen(''http://localhost:${APP_PORT}/health'')"' ]
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "3" # providing one per gunicorn worker given computational expense of HierS
+          memory: 4G
 
   ui:
     image: unmtransinfo/badapple2_ui:latest
     depends_on:
       api:
         condition: service_healthy
+    volumes:
+      - /var/www/badapple2:/app/dist/
     env_file:
-      - local.env
-    ports:
-      - "127.0.0.1:${UI_PORT}:8080"
-    networks:
-      - badapple_network
-    command: npx vite --port 8080
-    restart: unless-stopped
+      - .env
+    command: npx vite build
+    restart: no
 
 networks:
-  badapple_network:
+  backend:
     driver: bridge
 
 volumes:

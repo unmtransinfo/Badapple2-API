@@ -1,0 +1,174 @@
+name: badapple2-local
+services:
+  db:
+    image: unmtransinfo/badapple:${DB_IMAGE_TAG}
+    volumes:
+      - badapple_classic_data:/var/lib/postgresql/data
+    environment:
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+      - POSTGRES_USER=${DB_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${DB_POSTGRES_PASSWORD}
+    env_file:
+      - local.env
+    ports:
+      - "127.0.0.1:${DB_PORT}:5432"
+    networks:
+      - badapple_network
+    command:
+      - postgres
+      - -c
+      - max_connections=${PG_MAX_CONNECTIONS}
+      - -c
+      - shared_buffers=${PG_SHARED_BUFFERS}
+      - -c
+      - effective_cache_size=${PG_EFFECTIVE_CACHE_SIZE}
+      - -c
+      - maintenance_work_mem=${PG_MAINTENANCE_WORK_MEM}
+      - -c
+      - checkpoint_completion_target=${PG_CHECKPOINT_COMPLETION_TARGET}
+      - -c
+      - wal_buffers=${PG_WAL_BUFFERS}
+      - -c
+      - default_statistics_target=${PG_DEFAULT_STATISTICS_TARGET}
+      - -c
+      - random_page_cost=${PG_RANDOM_PAGE_COST}
+      - -c
+      - effective_io_concurrency=${PG_EFFECTIVE_IO_CONCURRENCY}
+      - -c
+      - work_mem=${PG_WORK_MEM}
+      - -c
+      - huge_pages=${PG_HUGE_PAGES}
+      - -c
+      - min_wal_size=${PG_MIN_WAL_SIZE}
+      - -c
+      - max_wal_size=${PG_MAX_WAL_SIZE}
+      - -c
+      - max_worker_processes=${PG_MAX_WORKER_PROCESSES}
+      - -c
+      - max_parallel_workers_per_gather=${PG_MAX_PARALLEL_WORKERS_PER_GATHER}
+      - -c
+      - max_parallel_workers=${PG_MAX_PARALLEL_WORKERS}
+      - -c
+      - max_parallel_maintenance_workers=${PG_MAX_PARALLEL_MAINTENANCE_WORKERS}
+    healthcheck:
+      test: [ "CMD-SHELL", "psql -U ${DB_USER} -d ${DB_NAME} -c 'SELECT 1 FROM scaffold LIMIT 1;'" ]
+      interval: 60s
+      timeout: 5s
+      retries: 60
+
+  db2:
+    image: unmtransinfo/badapple:${DB2_IMAGE_TAG}
+    volumes:
+      - badapple2_data:/var/lib/postgresql/data
+    environment:
+      - DB_NAME=${DB2_NAME}
+      - DB_USER=${DB2_USER}
+      - DB_PASSWORD=${DB2_PASSWORD}
+      - DB_PORT=${DB2_PORT}
+      - POSTGRES_USER=${DB2_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${DB2_POSTGRES_PASSWORD}
+    env_file:
+      - local.env
+    ports:
+      - "127.0.0.1:${DB2_PORT}:5432"
+    networks:
+      - badapple_network
+    command:
+      - postgres
+      - -c
+      - max_connections=${PG_MAX_CONNECTIONS}
+      - -c
+      - shared_buffers=${PG_SHARED_BUFFERS}
+      - -c
+      - effective_cache_size=${PG_EFFECTIVE_CACHE_SIZE}
+      - -c
+      - maintenance_work_mem=${PG_MAINTENANCE_WORK_MEM}
+      - -c
+      - checkpoint_completion_target=${PG_CHECKPOINT_COMPLETION_TARGET}
+      - -c
+      - wal_buffers=${PG_WAL_BUFFERS}
+      - -c
+      - default_statistics_target=${PG_DEFAULT_STATISTICS_TARGET}
+      - -c
+      - random_page_cost=${PG_RANDOM_PAGE_COST}
+      - -c
+      - effective_io_concurrency=${PG_EFFECTIVE_IO_CONCURRENCY}
+      - -c
+      - work_mem=${PG_WORK_MEM}
+      - -c
+      - huge_pages=${PG_HUGE_PAGES}
+      - -c
+      - min_wal_size=${PG_MIN_WAL_SIZE}
+      - -c
+      - max_wal_size=${PG_MAX_WAL_SIZE}
+      - -c
+      - max_worker_processes=${PG_MAX_WORKER_PROCESSES}
+      - -c
+      - max_parallel_workers_per_gather=${PG_MAX_PARALLEL_WORKERS_PER_GATHER}
+      - -c
+      - max_parallel_workers=${PG_MAX_PARALLEL_WORKERS}
+      - -c
+      - max_parallel_maintenance_workers=${PG_MAX_PARALLEL_MAINTENANCE_WORKERS}
+    healthcheck:
+      test: [ "CMD-SHELL", "psql -U ${DB2_USER} -d ${DB2_NAME} -c 'SELECT 1 FROM scaffold LIMIT 1;'" ]
+      interval: 60s
+      timeout: 5s
+      retries: 60
+
+  api:
+    image: unmtransinfo/badapple2_api:latest
+    depends_on:
+      db:
+        condition: service_healthy
+      db2:
+        condition: service_healthy
+    environment:
+      - APP_PORT=${APP_PORT}
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=5432
+      - DB2_HOST=db2
+      - DB2_NAME=${DB2_NAME}
+      - DB2_USER=${DB2_USER}
+      - DB2_PASSWORD=${DB2_PASSWORD}
+      - DB2_PORT=5432 # uses internal network, so port 5432 works
+    env_file:
+      - local.env
+    ports:
+      - "127.0.0.1:${APP_PORT}:${APP_PORT}"
+    networks:
+      - badapple_network
+    command: gunicorn --bind "0.0.0.0:${APP_PORT}" --workers ${N_WORKERS} --max-requests ${MAX_REQUESTS} --preload app:app
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", 'python -c "import urllib.request; urllib.request.urlopen(''http://localhost:${APP_PORT}/health'')"' ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  ui:
+    image: unmtransinfo/badapple2_ui:latest
+    depends_on:
+      api:
+        condition: service_healthy
+    env_file:
+      - local.env
+    ports:
+      - "127.0.0.1:${UI_PORT}:8080"
+    networks:
+      - badapple_network
+    command: npx vite --port 8080
+    restart: unless-stopped
+
+networks:
+  badapple_network:
+    driver: bridge
+
+volumes:
+  badapple_classic_data:
+  badapple2_data:

@@ -22,7 +22,7 @@ The steps below will install the databases (badapple_classic + badapple2), API, 
 2. (Optional) modify [local.env](local.env)
    - If you want to include activity outcomes ("activity" table), you will need to change `DB_IMAGE_TAG` to "badapple_classic-full" and `DB2_IMAGE_TAG` to "badapple2-full".
    - Note that if you do not include activity outcomes then you will be unable to use the `substance_search/get_assay_outcomes` API call.
-3. Run `docker compose -f compose-local.yml --env-file local.env up --build -d`
+3. Run `docker compose -f docker-compose.local.yml --env-file local.env up --build -d`
 4. The DBs, API, and UI will be accessible as follows:
    - UI: http://localhost:8080/badapple2/
    - API: http://localhost:8000/apidocs/
@@ -74,8 +74,8 @@ Additional examples can be seen in the [example_scripts/](example_scripts/) subd
 1. Install the badapple_classic and badapple2 DBs by following the instructions [here](https://github.com/unmtransinfo/Badapple2/blob/main/README.md)
 2. Copy [.env.example](app/.env.example) to `.env` (in the `/app` folder): `cp .env.example .env`
 3. Edit the `.env` credentials as needed
-4. Run `docker compose --env-file ./app/.env -f compose-development.yml up --build`
-   - Note: Depending on your version of docker, you may instead want to use: `docker-compose --env-file ./app/.env -f compose-development.yml up --build`
+4. Run `docker compose --env-file ./app/.env -f docker-compose.dev.yml up --build`
+   - Note: Depending on your version of docker, you may instead want to use: `docker-compose --env-file ./app/.env -f docker-compose.dev.yml up --build`
 5. The API should now be accessible from `localhost:8000`
    - A full set of Swagger documentation can be found at http://localhost:8000/apidocs
 
@@ -130,56 +130,75 @@ pre-commit run --all-files
 
 ## Setup (Production on Chiltepin)
 
-1. Copy [production_env.example](production_env.example) to `.env`: `cp production_env.example .env`
-2. Fill in/edit the `.env` credentials as needed
-3. Update apache2 config:
-   - Create a new file for apache2 config: `/etc/apache2/sites-available/badapple2api.conf`
-   - Add the following line to `/etc/apache2/apache2.conf`:
-     ```
-     Include /etc/apache2/sites-available/badapple2api.conf
-     ```
-   - Update the apache2 virtual config file: `/etc/apache2/sites-enabled/000-default.conf`
-   - Run config check: `sudo apachectl configtest`
-   - (If config check passed) reload apache: `sudo systemctl reload apache2`
-4. (If server was previously up): `docker-compose -f compose-production.yml down`
-5. Run `docker-compose -f compose-production.yml up --build -d`
+1. **Pull latest changes (for compose file mainly):**
 
-If you only need to update a single service (e.g., the UI) you don't need to do a full restart (with `down` + `up`). Instead, you can use this approach:
-
-1. Run `docker-compose -f compose-production.yml build badapple_ui`
-2. Then `docker-compose -f compose-production.yml up badapple_ui`
-3. (Recommended) Restart nginx: `docker-compose -f compose-production.yml restart badapple_nginx`
-
-### Production notes
-
-- If you are noticing some UI changes not showing up you may need to clear your browser cache
-- You will likely need to clear the docker cache if you've made changes to the DB
-- If you've pushed changes to the UI and docker is still using the cached github context, try changing UI build context to either a specific branch or commit. See https://docs.docker.com/reference/compose-file/build/#attributes for more info.
-- In extreme cases you may need to go in and manually override the DB. I still do not know what the reason is for this, but there are times when even after updating the .pgdump file the DB state will not be changed (even after clearing cache etc). These steps are what I've found work:
-
-1. Connect to the DB container: `docker exec -it <container_id> sh`
-2. (If necessary) re-download the .pgdump file. For example:
-
-```
-wget --no-cache -O /tmp/badapple_classic.pgdump https://unmtid-dbs.net/download/Badapple2/badapple_classic.pgdump
+```bash
+git pull
 ```
 
-3. Change to postgres user: `sudo -i -u postgres`
-4. Run pg_restore on the DB with the .pgdump file:
+2. **Copy [.env.prod.example](.env.prod.example) to `.env`**:
 
-```
-pg_restore --clean -O -x -v -d ${DB_NAME} <PATH_TO_PGDUMP_FILE>
-```
-
-5. Grant privileges back to DB_USER:
-
-```
-psql -p ${DB_PORT} -d ${DB_NAME} -c "GRANT SELECT ON ALL TABLES IN SCHEMA public TO ${DB_USER}"
-psql -p ${DB_PORT} -d ${DB_NAME} -c "GRANT SELECT ON ALL SEQUENCES IN SCHEMA public TO ${DB_USER}"
-psql -p ${DB_PORT} -d ${DB_NAME} -c "GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO ${DB_USER}"
+```bash
+cp .env.prod.example .env
 ```
 
-6. Exit DB container.
+3. **Modify `.env`**
+
+4. **(If significant changes to compose file):**
+
+   ```bash
+   docker compose -f docker-compose.prod.yml down
+   ```
+
+5. **Pull latest images and run:**
+
+   ```bash
+   docker compose -f docker-compose.prod.yml pull
+   docker compose -f docker-compose.prod.yml up -d --remove-orphans
+   ```
+
+6. **Verify deployment:**
+
+   ```bash
+   docker compose -f docker-compose.prod.yml ps
+   docker compose -f docker-compose.prod.yml logs api
+   ```
+
+7. **(One-time setup) If not done so already, modify your /etc/apache2/sites-available/ files to include the following lines**
+
+```
+   # badapple2
+   ProxyPass /badapple2/api http://localhost:<APP_PORT>/api
+   ProxyPassReverse /badapple2/api http://localhost:<APP_PORT>/api
+   ProxyPass /badapple2/apidocs/ http://localhost:<APP_PORT>/apidocs/
+   ProxyPassReverse /badapple2/apidocs/ http://localhost:<APP_PORT>/apidocs/
+   ProxyPass /badapple2/flasgger_static/ http://localhost:<APP_PORT>/badapple2/flasgger_static/
+   ProxyPassReverse /badapple2/flasgger_static/ http://localhost:<APP_PORT>/badapple2/flasgger_static/
+
+   # Static directory aliases (e.g., SPA UI builds)
+   # badapple2
+   Alias /badapple2 /var/www/badapple2/
+
+    <Directory /var/www/badapple2/>
+        Options -Indexes +FollowSymLinks
+        AllowOverride None
+        Require all granted
+
+        # SPA fallback: if the file/dir doesn't exist, serve index.html
+        RewriteEngine On
+        RewriteCond %{REQUEST_FILENAME} !-f
+        RewriteCond %{REQUEST_FILENAME} !-d
+        RewriteRule ^ index.html [L]
+   </Directory>
+```
+
+Then reload apache:
+
+```bash
+sudo apache2ctl configtest # make sure syntax ok
+sudo systemctl reload apache2
+curl -I https://chiltepin.health.unm.edu/badapple2/apidocs/ # should give HTTP/1.1 200
+```
 
 ## Acknowledgment
 
