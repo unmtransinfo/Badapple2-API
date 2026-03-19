@@ -53,6 +53,7 @@ services:
       - max_parallel_workers=${PG_MAX_PARALLEL_WORKERS}
       - -c
       - max_parallel_maintenance_workers=${PG_MAX_PARALLEL_MAINTENANCE_WORKERS}
+    restart: unless-stopped
     healthcheck:
       test: [ "CMD-SHELL", "psql -U ${DB_USER} -d ${DB_NAME} -c 'SELECT 1 FROM scaffold LIMIT 1;'" ]
       interval: 60s
@@ -112,6 +113,7 @@ services:
       - max_parallel_workers=${PG_MAX_PARALLEL_WORKERS}
       - -c
       - max_parallel_maintenance_workers=${PG_MAX_PARALLEL_MAINTENANCE_WORKERS}
+    restart: unless-stopped
     healthcheck:
       test: [ "CMD-SHELL", "psql -U ${DB2_USER} -d ${DB2_NAME} -c 'SELECT 1 FROM scaffold LIMIT 1;'" ]
       interval: 60s
